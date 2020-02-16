@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
     # start qtmodern
     mw = qtmodern.windows.ModernWindow(gui)
-    # close spash on completion
+    # close splash on completion
     splash.finish(mw)
     # restore native window frame
     # hacky but works until an official implementation exists
