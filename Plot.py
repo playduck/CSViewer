@@ -7,6 +7,7 @@ import numpy as np
 from PyQt5 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 
+
 # handles all graphing
 class Plot:
     def __init__(self, toolbar, parent):
@@ -18,7 +19,6 @@ class Plot:
 
         self.plt.showGrid(True, True, 0.6)
         self.plt.hideButtons()
-        # self.pw = pg.PlotWidget()
 
         # vLine for vertical x-Axis cursor
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
@@ -73,16 +73,21 @@ class Plot:
     # updates all plot styles and data
     def update(self, dataFiles):
         for i in range(0, len(dataFiles)):
+
             color = QtGui.QColor()
-            color.setHsvF(dataFiles[i].color[0] / 360, dataFiles[i].color[1] / 100, dataFiles[i].color[2] / 100)
+            color.setHsvF(dataFiles[i].color[0] / 360,
+                          dataFiles[i].color[1] / 100,
+                          dataFiles[i].color[2] / 100)
             pen = pg.mkPen(color=color, width=dataFiles[i].width)
 
             highlightColor = QtGui.QColor()
-            highlightColor.setHsvF(dataFiles[i].color[0] / 360, dataFiles[i].color[1] / 100, dataFiles[i].color[2] / 100, 0.2)
+            highlightColor.setHsvF(dataFiles[i].color[0] / 360,
+                                   dataFiles[i].color[1] / 100,
+                                   dataFiles[i].color[2] / 100, 0.2)
             highlightPen = pg.mkPen(color=highlightColor, width=dataFiles[i].width * 4 + 10)
 
             if not dataFiles[i].enabled:
-                dataFiles[i].cursor.setPen(pg.mkPen(color=(0,0,0,0), width=0))
+                dataFiles[i].cursor.setPen(pg.mkPen(color=(0, 0, 0, 0), width=0))
                 dataFiles[i].plot.setData(pen=None, symbolPen=None, symbolBrush=None, shadowPen=None)
 
             else:
@@ -93,8 +98,10 @@ class Plot:
                         dataFiles[i].plot.setData(pen=None, symbolPen=pen, symbolBrush=highlightColor, shadowPen=None)
                     else:
                         dataFiles[i].plot.setData(pen=None, symbolPen=pen, symbolBrush=color, shadowPen=None)
+
                 else:
                     dataFiles[i].plot.setData(pen=pen, symbolPen=None, symbolBrush=None, shadowPen=None)
+
                     if dataFiles[i].highlight:
                         dataFiles[i].plot.setData(shadowPen=highlightPen)
 
@@ -111,6 +118,7 @@ class Plot:
 
             for i in range(0, len(self.parent.globalFileList)):
                 if self.parent.globalFileList[i].enabled:
+
                     index = np.clip(np.searchsorted(self.parent.globalFileList[i].modData["x"], [mousePoint.x()])[0],
                                     0, len(self.parent.globalFileList[i].modData["y"]) - 1)
 
@@ -123,4 +131,3 @@ class Plot:
                         self.parent.globalFileList[i].modData["y"][index])
 
             self.info.setText(info)
-

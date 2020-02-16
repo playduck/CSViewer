@@ -86,7 +86,7 @@ class DataFile:
         if self.integrate > 0:
             for i in range(self.integrate):
                 for j, val in enumerate(x):
-                    y[j] = integrate.quad(lambda x: y[j], 0, val)[0]
+                    y[j] = integrate.quad(lambda _: y[j], 0, val)[0]
         elif self.integrate < 0:
             for i in range(abs(self.integrate)):
                 y = np.gradient(y, x[1] - x[0])
@@ -116,7 +116,9 @@ class DataFile:
         self.enable.setChecked(self.enabled)
         self.enable.stateChanged.connect(self.enableHandle)
         self.enable.setObjectName("enable_checkbox")
-        self.enable.setStyleSheet("background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(self.color[0], self.color[1], self.color[2]))
+        self.enable.setStyleSheet(
+            "background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(
+                self.color[0], self.color[1],self.color[2]))
 
         self.layout.addWidget(self.enable)
 
@@ -129,7 +131,7 @@ class DataFile:
         self.offset = SuperSpinner(None)
         self.offset.setRange(-9999, 9999)
         self.offset.setFixedWidth(75)
-        self.offset.valueChanged.connect(lambda x,who="xOffset": self.applyChange(x, who))
+        self.offset.valueChanged.connect(lambda x, who="xOffset": self.applyChange(x, who))
         self.offset_label = QtWidgets.QLabel("Offset:")
         self.offset_label.setBuddy(self.offset)
         self.layout.addWidget(self.offset_label)
@@ -180,16 +182,16 @@ class DataFile:
         self.colorPickerBtn.setStyleSheet("background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(
             self.color[0], self.color[1], self.color[2]))
 
-        self.colorPickerBtn.clicked.connect(lambda x,who="color": self.applyChange(x, who))
+        self.colorPickerBtn.clicked.connect(lambda x, who="color": self.applyChange(x, who))
         self.colorPickerLabel = QtWidgets.QLabel("Farbe:")
         self.colorPickerLabel.setBuddy(self.colorPickerBtn)
 
         # Width Spinner
         self.widthSpinner = SuperSpinner()
         self.widthSpinner.setRange(1, 20)
-        #width.setFixedWidth(100)
+        # width.setFixedWidth(100)
         self.widthSpinner.setValue(self.width)
-        self.widthSpinner.valueChanged.connect(lambda x,who="width": self.applyChange(x, who))
+        self.widthSpinner.valueChanged.connect(lambda x, who="width": self.applyChange(x, who))
         self.widthLabel = QtWidgets.QLabel("Breite:")
         self.widthLabel.setBuddy(self.widthSpinner)
 
@@ -197,7 +199,7 @@ class DataFile:
         self.interpolationBox = QtWidgets.QComboBox()
         self.interpolationBox.addItems(["Keine", "Linear", "Bezier"])
         self.interpolationBox.setCurrentText(self.interpolation)
-        self.interpolationBox.currentTextChanged.connect(lambda x,who="interpolation": self.applyChange(x, who))
+        self.interpolationBox.currentTextChanged.connect(lambda x, who="interpolation": self.applyChange(x, who))
         self.interpolationLabel = QtWidgets.QLabel("Interpolation:")
         self.interpolationLabel.setBuddy(self.interpolationBox)
 
@@ -205,20 +207,20 @@ class DataFile:
         self.interpolationAmountBox = QtWidgets.QSpinBox()
         self.interpolationAmountBox.setRange(len(self.data["Zeit"]), len(self.data["Zeit"]) * 1000)  # Automate maybe?
         self.interpolationAmountBox.setValue(self.interpolationAmount)
-        self.interpolationAmountBox.valueChanged.connect(lambda x,who="interpolationAmount": self.applyChange(x, who))
+        self.interpolationAmountBox.valueChanged.connect(lambda x, who="interpolationAmount": self.applyChange(x, who))
         self.interpolationAmountLabel = QtWidgets.QLabel("Interpolationen:")
         self.interpolationAmountLabel.setBuddy(self.interpolationAmountBox)
 
         # Integration
         self.integrationBox = QtWidgets.QSpinBox()
         self.integrationBox.setRange(-10, 10)
-        self.integrationBox.valueChanged.connect(lambda x,who="integration": self.applyChange(x, who))
+        self.integrationBox.valueChanged.connect(lambda x, who="integration": self.applyChange(x, who))
         self.integrationLabel = QtWidgets.QLabel("Integration:")
         self.integrationLabel.setBuddy(self.integrationBox)
 
         # Filter
         self.filterBox = QtWidgets.QDoubleSpinBox()
-        self.filterBox.valueChanged.connect(lambda x,who="filter": self.applyChange(x, who))
+        self.filterBox.valueChanged.connect(lambda x, who="filter": self.applyChange(x, who))
         self.filterLabel = QtWidgets.QLabel("Filter:")
         self.filterLabel.setBuddy(self.integrationBox)
 
@@ -227,19 +229,19 @@ class DataFile:
         self.OKButton.clicked.connect(self.settings.close)
         self.OKButton.setDefault(True)
 
-        self.layout.addWidget(self.colorPickerLabel,     0, 0)
-        self.layout.addWidget(self.colorPickerBtn,       0, 1)
-        self.layout.addWidget(self.widthLabel,           1, 0)
-        self.layout.addWidget(self.widthSpinner,         1, 1)
-        self.layout.addWidget(self.interpolationLabel,   2, 0)
-        self.layout.addWidget(self.interpolationBox,     2, 1)
-        self.layout.addWidget(self.interpolationAmountLabel, 3, 0)
-        self.layout.addWidget(self.interpolationAmountBox,   3, 1)
-        self.layout.addWidget(self.filterLabel,          4, 0)
-        self.layout.addWidget(self.filterBox,            4, 1)
-        self.layout.addWidget(self.integrationLabel,     5, 0)
-        self.layout.addWidget(self.integrationBox,       5, 1)
-        self.layout.addWidget(self.OKButton,             6, 1)
+        self.layout.addWidget(self.colorPickerLabel,            0, 0)
+        self.layout.addWidget(self.colorPickerBtn,              0, 1)
+        self.layout.addWidget(self.widthLabel,                  1, 0)
+        self.layout.addWidget(self.widthSpinner,                1, 1)
+        self.layout.addWidget(self.interpolationLabel,          2, 0)
+        self.layout.addWidget(self.interpolationBox,            2, 1)
+        self.layout.addWidget(self.interpolationAmountLabel,    3, 0)
+        self.layout.addWidget(self.interpolationAmountBox,      3, 1)
+        self.layout.addWidget(self.filterLabel,                 4, 0)
+        self.layout.addWidget(self.filterBox,                   4, 1)
+        self.layout.addWidget(self.integrationLabel,            5, 0)
+        self.layout.addWidget(self.integrationBox,              5, 1)
+        self.layout.addWidget(self.OKButton,                    6, 1)
 
         self.settings.setLayout(self.layout)
 
@@ -263,7 +265,6 @@ class DataFile:
             self.frame.findChild(QtWidgets.QCheckBox, "enable_checkbox").setStyleSheet(
                 "background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(
                     self.color[0], self.color[1], self.color[2]))
-
         elif who == "width":
             self.width = evt
         elif who == "interpolation":
@@ -281,5 +282,3 @@ class DataFile:
 
         self.calculateData()
         self.handler.updatePlot()
-
-
