@@ -228,6 +228,7 @@ class CSViewerWindow(QtWidgets.QWidget):
                         break
 
             file.close()
+            self.updatePlot()
 
     # shows info box
     def showInfo(self):
