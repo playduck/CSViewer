@@ -250,31 +250,31 @@ class CSViewerWindow(QtWidgets.QWidget):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    # show splash sceen
+    # show splash screen
     splashImg = QtGui.QPixmap("./assets/logo.png")
     splash = QtGui.QSplashScreen(splashImg, QtCore.Qt.WindowStaysOnTopHint)
     splash.show()
 
-    def start():
-        qtmodern.styles.dark(app)
-        # initilize program
-        gui = CSViewerWindow()
+    # set style (order is important)
+    qtmodern.styles.dark(app)
+    # initialize program
+    gui = CSViewerWindow()
 
-        # start qtmodern
-        mw = qtmodern.windows.ModernWindow(gui)
-        # restore native window frame
-        # hacky but works until an official implementation exists
-        mw.setWindowFlags(QtCore.Qt.Window)
-        mw.titleBar.hide()
-        gui.window = mw
+    # start qtmodern
+    mw = qtmodern.windows.ModernWindow(gui)
+    # close spash on completion
+    splash.finish(mw)
+    # restore native window frame
+    # hacky but works until an official implementation exists
+    mw.setWindowFlags(QtCore.Qt.Window)
+    mw.titleBar.hide()
+    # add handler for global positioning
+    gui.window = mw
 
-        # load custom styles
-        with open("./style.qss", "r") as fh:
-            gui.setStyleSheet(fh.read())
+    # load custom styles
+    with open("./style.qss", "r") as fh:
+        gui.setStyleSheet(fh.read())
 
-        mw.show()
-        splash.close()
-
-    QtCore.QTimer.singleShot(400, start)
+    mw.show()
 
     sys.exit(app.exec_())
