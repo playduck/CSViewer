@@ -1,6 +1,7 @@
 # IDE/Enviornment
 __pycache__/*
 .idea/*
+.vscode/*
 /venv/*
 /External Libraries/*
 
