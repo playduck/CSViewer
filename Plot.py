@@ -20,7 +20,7 @@ class Plot:
         self.plt.hideButtons()
         # self.pw = pg.PlotWidget()
 
-         # vLine for vertical x-Axis cursor
+        # vLine for vertical x-Axis cursor
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
         self.vLine.setPen((255,255,255,200))
         self.plt.addItem(self.vLine, ignoreBounds=True)

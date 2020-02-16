@@ -106,7 +106,7 @@ class DataFile:
         # save data
         self.modData = pd.DataFrame({'x': x, 'y': y})
 
-    # displays the list item in the filelist
+    # displays the list item in the file list
     def showListItem(self):
         boldFont = QtGui.QFont()
         boldFont.setBold(True)
@@ -173,8 +173,7 @@ class DataFile:
     def initSettings(self):
         self.settings.setWindowFlags(
             QtCore.Qt.FramelessWindowHint
-             | QtCore.Qt.WindowStaysOnTopHint
-            # | QtCore.Qt.SplashScreen
+            | QtCore.Qt.WindowStaysOnTopHint
         )
 
         self.layout = QtWidgets.QGridLayout()
@@ -208,7 +207,7 @@ class DataFile:
 
         # Interpolation Amount
         self.interpolationAmountBox = QtWidgets.QSpinBox()
-        self.interpolationAmountBox.setRange(len(self.data["Zeit"]), len(self.data["Zeit"]) * 1000)
+        self.interpolationAmountBox.setRange(len(self.data["Zeit"]), len(self.data["Zeit"]) * 1000)  # Automate maybe?
         self.interpolationAmountBox.setValue(self.interpolationAmount)
         self.interpolationAmountBox.valueChanged.connect(lambda x,who="interpolationAmount": self.applyChange(x, who))
         self.interpolationAmountLabel = QtWidgets.QLabel("Interpolationen:")
@@ -262,8 +261,12 @@ class DataFile:
             self.color[1] = int(newColor[1] * 100)
             self.color[2] = int(newColor[2] * 100)
 
-            self.settings.findChild(QtWidgets.QPushButton, "color_select_button").setStyleSheet("background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(self.color[0], self.color[1], self.color[2]))
-            self.frame.findChild(QtWidgets.QCheckBox, "enable_checkbox").setStyleSheet("background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(self.color[0], self.color[1], self.color[2]))
+            self.settings.findChild(QtWidgets.QPushButton, "color_select_button").setStyleSheet(
+                "background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(
+                    self.color[0], self.color[1], self.color[2]))
+            self.frame.findChild(QtWidgets.QCheckBox, "enable_checkbox").setStyleSheet(
+                "background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(
+                    self.color[0], self.color[1], self.color[2]))
 
         elif who == "width":
             self.width = evt

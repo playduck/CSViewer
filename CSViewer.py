@@ -9,7 +9,7 @@ import json
 import Plot
 import platform
 import DataFile
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5 import QtGui, QtWidgets
 import qtmodern.styles
 import qtmodern.windows
 
@@ -23,7 +23,7 @@ COLORS = [
 ]
 
 
-# function tries to generate uniquie Colors for graphs
+# function tries to generate unique Colors for graphs
 def getColor(i):
     if i < len(COLORS):
         return COLORS[i].copy()
@@ -102,11 +102,9 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         self.updatePlot()
 
-
-    # update drawing and replot
+    # update drawing and redraw
     def updatePlot(self):
         self.plot.update(self.globalFileList)
-        # self.plot.showData(globalFileList)
 
     # highlight plot based on itemList
     def highlightSelected(self, item):
@@ -135,7 +133,6 @@ class CSViewerWindow(QtWidgets.QWidget):
                 break
         del df
         self.plot.update(self.globalFileList)
-        # self.plot.showData(globalFileList)
 
     # adds a datafile from a file
     def addFileList(self, filename, color):
@@ -148,14 +145,12 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.fileList.setItemWidget(temp[0], temp[1])
 
         self.plot.update(self.globalFileList)
-#        self.show()
 
         return df
 
     # prompts user for input file
     def openFileNameDialog(self):
         options = QtWidgets.QFileDialog.Options()
-        # options |= QtWidgets.QFileDialog.DontUseNativeDialog
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                             "CSV Dateien (*.csv);;Alle Dateinen (*)", options=options)
         if filename:
