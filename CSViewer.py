@@ -138,8 +138,8 @@ class CSViewerWindow(QtWidgets.QWidget):
         # self.plot.showData(globalFileList)
 
     # adds a datafile from a file
-    def addFileList(self, filename):
-        df = DataFile.DataFile(filename, self, getColor(len(self.globalFileList)))
+    def addFileList(self, filename, color):
+        df = DataFile.DataFile(filename, self, color)
         df.plot, df.cursor = self.plot.initilizePlot(df)
         self.globalFileList.append(df)
 
@@ -159,7 +159,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                             "CSV Dateien (*.csv);;Alle Dateinen (*)", options=options)
         if filename:
-            self.addFileList(filename)
+            self.addFileList(filename, getColor(len(self.globalFileList)))
 
     # prompts user for save-file location and saves data
     def save(self):
@@ -204,9 +204,8 @@ class CSViewerWindow(QtWidgets.QWidget):
             dataJson = json.loads(file.read())
             for i, data in enumerate(dataJson["data"]):
                 if os.path.isfile(data["filename"]):
-                    df = self.addFileList(data["filename"])
+                    df = self.addFileList(data["filename"], data["color"])
                     df.enabled = data["enabled"]
-                    df.color = data["color"]
                     df.width = data["width"]
                     df.xOffset = data["xOffset"]
                     df.yOffset = data["yOffset"]
