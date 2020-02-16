@@ -159,7 +159,7 @@ class DataFile:
 
     def showSettings(self):
         framePos = self.frame.geometry()
-        if platform.system() != "windows":
+        if platform.system() != "Windows":
             windowPos = self.handler.window.pos()
         else:
             windowPos = self.handler.pos()

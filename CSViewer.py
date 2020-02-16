@@ -251,14 +251,15 @@ if __name__ == "__main__":
 
     gui = CSViewerWindow()
 
-    with open("./style.qss", "r") as fh:
-        gui.setStyleSheet(fh.read())
-
-    if platform.system() != "windows":
+    print(platform.system())
+    if platform.system() != "Windows":
         qtmodern.styles.dark(app)
 
         mw = qtmodern.windows.ModernWindow(gui)
         gui.window = mw
+
+        with open("./style.qss", "r") as fh:
+            gui.setStyleSheet(fh.read())
 
         mw.show()
     else:
