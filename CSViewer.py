@@ -41,6 +41,12 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         self.setWindowTitle("CSViewer")
         self.setGeometry(50, 50, 1000, 500)
+        # Set Window to screen center
+        geometry = self.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        center = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        geometry.moveCenter(center)
+        self.move(geometry.topLeft())
 
         self.mainLayout = QtWidgets.QVBoxLayout()
         self.subLayout = QtWidgets.QHBoxLayout()
@@ -227,7 +233,8 @@ class CSViewerWindow(QtWidgets.QWidget):
     # shows info box
     def showInfo(self):
         msgBox = QtWidgets.QMessageBox()
-        msgBox.setIcon(QtWidgets.QMessageBox.Information)
+        # msgBox.setIcon(QtWidgets.QMessageBox.Information)
+        msgBox.setIconPixmap(QtGui.QPixmap("./assets/logo.png"))
         msgBox.setWindowTitle("Info")
         msgBox.setText("CSViewer")
         msgBox.setInformativeText("""
@@ -243,22 +250,32 @@ class CSViewerWindow(QtWidgets.QWidget):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    gui = CSViewerWindow()
+    # show splash sceen
+    splashImg = QtGui.QPixmap("./assets/logo.png")
+    splash = QtGui.QSplashScreen(splashImg, QtCore.Qt.WindowStaysOnTopHint)
+    splash.show()
 
-    # start qtmodern
-    qtmodern.styles.dark(app)
-    mw = qtmodern.windows.ModernWindow(gui)
-    # restore native window frame
-    # hacky but works until an official implementation exists
-    mw.setWindowFlags(QtCore.Qt.Window)
-    mw.titleBar.hide()
+    def start():
+        # initilize program
+        gui = CSViewerWindow()
 
-    gui.window = mw
+        # start qtmodern
+        qtmodern.styles.dark(app)
+        mw = qtmodern.windows.ModernWindow(gui)
+        # restore native window frame
+        # hacky but works until an official implementation exists
+        mw.setWindowFlags(QtCore.Qt.Window)
+        mw.titleBar.hide()
 
-    # load custom styles
-    with open("./style.qss", "r") as fh:
-        gui.setStyleSheet(fh.read())
+        # load custom styles
+        with open("./style.qss", "r") as fh:
+            gui.setStyleSheet(fh.read())
 
-    mw.show()
+        gui.window = mw
+
+        mw.show()
+        splash.close()
+
+    QtCore.QTimer.singleShot(400, start)
 
     sys.exit(app.exec_())

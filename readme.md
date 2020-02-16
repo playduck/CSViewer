@@ -1,4 +1,4 @@
-# CSViewer
+![CSViewer](./assets/logo.png)
 PyQt GUI um `.csv` Datein zu visualisieren.
 
 ## Installation
