@@ -9,7 +9,7 @@ import json
 import Plot
 import platform
 import DataFile
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtCore, QtWidgets
 import qtmodern.styles
 import qtmodern.windows
 
@@ -246,19 +246,20 @@ if __name__ == "__main__":
 
     gui = CSViewerWindow()
 
-    print(platform.system())
-    if platform.system() != "Windows":
-        qtmodern.styles.dark(app)
+    # start qtmodern
+    qtmodern.styles.dark(app)
+    mw = qtmodern.windows.ModernWindow(gui)
+    # restore native window frame
+    # hacky but works until an official implementation exists
+    mw.setWindowFlags(QtCore.Qt.Window)
+    mw.titleBar.hide()
 
-        mw = qtmodern.windows.ModernWindow(gui)
-        gui.window = mw
+    gui.window = mw
 
-        with open("./style.qss", "r") as fh:
-            gui.setStyleSheet(fh.read())
+    # load custom styles
+    with open("./style.qss", "r") as fh:
+        gui.setStyleSheet(fh.read())
 
-        mw.show()
-    else:
-        if "Fusion" in QtWidgets.QStyleFactory.keys():
-            app.setStyle('Fusion')
+    mw.show()
 
     sys.exit(app.exec_())
