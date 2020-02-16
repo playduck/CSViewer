@@ -1,0 +1,8 @@
+# IDE/Enviornment
+__pycache__/*
+.idea/*
+/venv/*
+/External Libraries/*
+
+# MacOS
+.DS_Store

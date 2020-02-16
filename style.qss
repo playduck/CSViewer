@@ -1,0 +1,32 @@
+QToolBar {
+    padding: 0;
+}
+QToolBar::separator {
+    width: 20px;
+}
+
+QPushButton {
+    border-radius: 2px;
+    icon-size: 20px;
+    padding: 5px;
+    margin: 2px;
+    background-color: rgb(30, 30, 30);
+}
+QPushButton:hover {
+    background-color: rgb(40, 40, 40);
+    border: 1px solid black;
+}
+QPushButton:pressed {
+    background-color: rgb(20, 20, 20);
+}
+QPushButton:flat {
+    border: none;
+    background-color: transparent;
+}
+
+QListView::item:selected {
+    border: 1px solid black;
+}
+QListView::item:selected:active {
+    background: rgb(40, 40, 40);
+}
