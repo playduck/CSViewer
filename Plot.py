@@ -110,16 +110,17 @@ class Plot:
             info = "<span>x={:05.2f}</span>".format(mousePoint.x())
 
             for i in range(0, len(self.parent.globalFileList)):
-                index = np.clip(np.searchsorted(self.parent.globalFileList[i].modData["x"], [mousePoint.x()])[0],
-                                0, len(self.parent.globalFileList[i].modData["y"]) - 1)
+                if self.parent.globalFileList[i].enabled:
+                    index = np.clip(np.searchsorted(self.parent.globalFileList[i].modData["x"], [mousePoint.x()])[0],
+                                    0, len(self.parent.globalFileList[i].modData["y"]) - 1)
 
-                self.parent.globalFileList[i].cursor.setPos(self.parent.globalFileList[i].modData["y"][index])
+                    self.parent.globalFileList[i].cursor.setPos(self.parent.globalFileList[i].modData["y"][index])
 
-                info += "\t  <span style='color: hsv({:d},{:d}%,{:d}%);'>y={:4.2f}</span>".format(
-                    self.parent.globalFileList[i].color[0],
-                    self.parent.globalFileList[i].color[1],
-                    self.parent.globalFileList[i].color[2],
-                    self.parent.globalFileList[i].modData["y"][index])
+                    info += "\t  <span style='color: hsv({:d},{:d}%,{:d}%);'>y={:4.2f}</span>".format(
+                        self.parent.globalFileList[i].color[0],
+                        self.parent.globalFileList[i].color[1],
+                        self.parent.globalFileList[i].color[2],
+                        self.parent.globalFileList[i].modData["y"][index])
 
             self.info.setText(info)
 
