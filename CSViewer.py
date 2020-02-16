@@ -7,7 +7,6 @@ import sys
 import os.path
 import json
 import Plot
-import platform
 import DataFile
 from PyQt5 import QtGui, QtCore, QtWidgets
 import qtmodern.styles

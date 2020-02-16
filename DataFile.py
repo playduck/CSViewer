@@ -4,7 +4,6 @@
 #
 
 import os
-import platform
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 import pandas as pd
@@ -159,13 +158,10 @@ class DataFile:
 
     def showSettings(self):
         framePos = self.frame.geometry()
-        if platform.system() != "Windows":
-            windowPos = self.handler.window.pos()
-        else:
-            windowPos = self.handler.pos()
+        windowPos = self.handler.window.pos()
 
         x = windowPos.x() + 150
-        y = windowPos.y() + 1 * framePos.y() + 108  # offsets only work for fusion style
+        y = windowPos.y() + 1 * framePos.y() + 130  # offsets only work for fusion style
 
         self.settings.move(x, y)
         self.settings.exec_()
