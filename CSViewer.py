@@ -7,6 +7,7 @@ import sys
 import os.path
 import json
 import Plot
+import platform
 import DataFile
 from PyQt5 import QtGui, QtCore, QtWidgets
 import qtmodern.styles
@@ -248,15 +249,20 @@ class CSViewerWindow(QtWidgets.QWidget):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    qtmodern.styles.dark(app)
     gui = CSViewerWindow()
-
-    mw = qtmodern.windows.ModernWindow(gui)
-    gui.window = mw
 
     with open("./style.qss", "r") as fh:
         gui.setStyleSheet(fh.read())
 
-    mw.show()
+    if platform.system() != "windows":
+        qtmodern.styles.dark(app)
+
+        mw = qtmodern.windows.ModernWindow(gui)
+        gui.window = mw
+
+        mw.show()
+    else:
+        if "Fusion" in QtWidgets.QStyleFactory.keys():
+            app.setStyle('Fusion')
 
     sys.exit(app.exec_())
