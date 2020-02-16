@@ -256,22 +256,21 @@ if __name__ == "__main__":
     splash.show()
 
     def start():
+        qtmodern.styles.dark(app)
         # initilize program
         gui = CSViewerWindow()
 
         # start qtmodern
-        qtmodern.styles.dark(app)
         mw = qtmodern.windows.ModernWindow(gui)
         # restore native window frame
         # hacky but works until an official implementation exists
         mw.setWindowFlags(QtCore.Qt.Window)
         mw.titleBar.hide()
+        gui.window = mw
 
         # load custom styles
         with open("./style.qss", "r") as fh:
             gui.setStyleSheet(fh.read())
-
-        gui.window = mw
 
         mw.show()
         splash.close()
