@@ -13,7 +13,8 @@ class Plot:
     def __init__(self, toolbar, parent):
         self.parent = parent
 
-        pg.setConfigOptions(antialias=True)
+        pg.setConfigOptions(antialias=True, background="#1E1E1E", useWeave=True)
+
         self.win = pg.GraphicsWindow()
         self.plt = self.win.addPlot()
 
