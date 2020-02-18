@@ -8,6 +8,7 @@ import os.path
 import json
 import Plot
 import DataFile
+import pandas as pd
 from PyQt5 import QtGui, QtCore, QtWidgets
 import qtmodern.styles
 import qtmodern.windows
@@ -65,7 +66,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.toolbar.addSeparator()
 
         self.saveBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/save.png"), "Speichern")
-        self.saveBtn.clicked.connect(self.save)
+        self.saveBtn.clicked.connect(self.saveOptions)
         self.toolbar.addWidget(self.saveBtn)
 
         self.loadBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/load.png"), "Laden")
@@ -140,11 +141,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.plot.update(self.globalFileList)
 
     # adds a datafile from a file
-    def addFileList(self, filename, color):
-        df = DataFile.DataFile(filename, self, color)
-        df.plot, df.cursor = self.plot.initilizePlot(df)
-        self.globalFileList.append(df)
-
+    def addFileList(self, df):
         temp = df.showListItem()
         self.fileList.addItem(temp[0])
         self.fileList.setItemWidget(temp[0], temp[1])
@@ -159,10 +156,53 @@ class CSViewerWindow(QtWidgets.QWidget):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                             "CSV Dateien (*.csv);;Alle Dateinen (*)", options=options)
         if filename:
-            self.addFileList(filename, getColor(len(self.globalFileList)))
+            df = DataFile.DataFile(filename, self, getColor(len(self.globalFileList)))
+            df.initSettings()
+            df.calculateData()
+            df.plot, df.cursor = self.plot.initilizePlot(df)
+            self.globalFileList.append(df)
+            self.addFileList(df)
+
+    # show Option Dialog for saving
+    def saveOptions(self):
+        saveDialogBox = QtWidgets.QDialog()
+        saveDialogBox.setWindowFlags(
+            QtCore.Qt.WindowStaysOnTopHint
+        )
+        layout = QtWidgets.QGridLayout()
+
+        embed = QtWidgets.QCheckBox()
+        embedLabel = QtWidgets.QLabel("Daten Einbetten: ")
+        embedLabel.setBuddy(embed)
+
+        color = QtWidgets.QCheckBox()
+        colorLabel = QtWidgets.QLabel("Farbe speichern: ")
+        colorLabel.setBuddy(color)
+
+        OKButton = QtWidgets.QPushButton("Ok")
+        OKButton.clicked.connect(saveDialogBox.accept)
+
+        CancelButton = QtWidgets.QPushButton("Abbrechen")
+        CancelButton.clicked.connect(saveDialogBox.reject)
+
+        layout.addWidget(embedLabel,    0,0)
+        layout.addWidget(embed,         0,1)
+        layout.addWidget(colorLabel,    1,0)
+        layout.addWidget(color,         1,1)
+
+        layout.addWidget(OKButton,      2,0)
+        layout.addWidget(CancelButton,  2,1)
+
+        saveDialogBox.setLayout(layout)
+        saveDialogBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        ret = saveDialogBox.exec_()
+        saveDialogBox.close()
+
+        if ret:
+            self.save(embed.isChecked(), color.isChecked())
 
     # prompts user for save-file location and saves data
-    def save(self):
+    def save(self, embed, color):
         options = QtWidgets.QFileDialog.Options()
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "",
                                                   "CSV Datei (*.csviewer);;JSON Datei (*.json);;Alle Dateinen (*)", options=options)
@@ -174,14 +214,15 @@ class CSViewerWindow(QtWidgets.QWidget):
                 data = {
                     "filename": df.filename,
                     "enabled": df.enabled,
-                    "color": df.color,
+                    "color": df.color if color else None,
                     "width": df.width,
                     "xOffset": df.xOffset,
                     "yOffset": df.yOffset,
                     "interpolation": df.interpolation,
                     "interpolationAmount": df.interpolationAmount,
                     "integrate": df.integrate,
-                    "filter": df.filter
+                    "filter": df.filter,
+                    "dataEmbed": df.data.to_json() if embed else None
                 }
                 dataMainArray.append(data)
 
@@ -203,8 +244,11 @@ class CSViewerWindow(QtWidgets.QWidget):
             file = open(filename, "r")
             dataJson = json.loads(file.read())
             for i, data in enumerate(dataJson["data"]):
-                if os.path.isfile(data["filename"]):
-                    df = self.addFileList(data["filename"], data["color"])
+                if os.path.isfile(data["filename"]) or data["dataEmbed"]:
+
+                    color = data["color"] if data["color"] else getColor(len(self.globalFileList))
+
+                    df = DataFile.DataFile(data["filename"], self, color)
                     df.enabled = data["enabled"]
                     df.width = data["width"]
                     df.xOffset = data["xOffset"]
@@ -214,7 +258,15 @@ class CSViewerWindow(QtWidgets.QWidget):
                     df.integrate = data["integrate"]
                     df.filter = data["filter"]
 
+                    if data["dataEmbed"]:
+                        df.data = pd.read_json(data["dataEmbed"])
+
+                    df.initSettings()
                     df.calculateData()
+
+                    df.plot, df.cursor = self.plot.initilizePlot(df)
+                    self.globalFileList.append(df)
+                    self.addFileList(df)
                 else:
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setIcon(QtWidgets.QMessageBox.Critical)

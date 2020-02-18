@@ -63,16 +63,19 @@ class DataFile:
         self.integrate = 0
         self.filter = 0
 
-        self.initSettings()
-        self.calculateData()
-
     def readData(self):
-        return pd.read_csv(self.filename, sep=",", header=0, skipinitialspace=True)
+        if os.path.isfile(self.filename):
+            return pd.read_csv(self.filename, sep=",", header=0, skipinitialspace=True)
+        else:
+            return pd.DataFrame([0], [0])
 
     # applies all calculations and interpolation
     def calculateData(self):
         x = self.data["Zeit"].copy()  # TODO: automate if possible or wait for spec
         y = self.data["Messung"].copy()
+
+        # set Interpolation Ammount Box
+        self.interpolationAmountBox.setRange(len(x), len(x) + self.interpolationAmount * 10)
 
         # Add Offsets
         x = x + self.xOffset
@@ -130,6 +133,7 @@ class DataFile:
 
         self.offset = SuperSpinner(None)
         self.offset.setRange(-9999, 9999)
+        self.offset.setValue(self.xOffset)
         self.offset.setFixedWidth(75)
         self.offset.valueChanged.connect(lambda x, who="xOffset": self.applyChange(x, who))
         self.offset_label = QtWidgets.QLabel("Offset:")
@@ -187,7 +191,7 @@ class DataFile:
         self.colorPickerLabel.setBuddy(self.colorPickerBtn)
 
         # Width Spinner
-        self.widthSpinner = SuperSpinner()
+        self.widthSpinner = QtWidgets.QSpinBox()
         self.widthSpinner.setRange(1, 20)
         # width.setFixedWidth(100)
         self.widthSpinner.setValue(self.width)
@@ -205,7 +209,7 @@ class DataFile:
 
         # Interpolation Amount
         self.interpolationAmountBox = QtWidgets.QSpinBox()
-        self.interpolationAmountBox.setRange(len(self.data["Zeit"]), len(self.data["Zeit"]) * 1000)  # Automate maybe?
+        self.interpolationAmountBox.setRange(0, 1000)
         self.interpolationAmountBox.setValue(self.interpolationAmount)
         self.interpolationAmountBox.valueChanged.connect(lambda x, who="interpolationAmount": self.applyChange(x, who))
         self.interpolationAmountLabel = QtWidgets.QLabel("Interpolationen:")

@@ -50,10 +50,10 @@ Das Programm ist in 3 Sektionen aufgeteilt.
 
 - Automatische Zuweisung der Daten auch mit arbiträren Header Namen ("Zeit", "Messung" -&gt; "x", "y")
 - Eigenes Pyqtgraph Objekt:
-- Deaktivieren des Kontextmenüs (manche Optionen können das Programm zum Absturz bringen)
-- Veränderbare rendering Reihenfolge durch Drag-and-drop verschieben von Elementen der File List
-- Visuelles verschieben von Graphen für intuitive Kontrolle über x und y Offset (?)
+    - Deaktivieren des Kontextmenüs (manche Optionen können das Programm zum Absturz bringen)
+    - Veränderbare rendering Reihenfolge durch Drag-and-drop verschieben von Elementen der File List
+    - Visuelles verschieben von Graphen für intuitive Kontrolle über x und y Offset (?)
 - Programm Icon
-- Optionen beim speichern (Daten einbetten, Farben speichern, etc.)
+- ~~Optionen beim speichern (Daten einbetten, Farben speichern, etc.)~~
 - Compiled release (.exe, .dmg, ...?)
 - Testen auf Linux (?)
