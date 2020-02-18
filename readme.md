@@ -17,7 +17,7 @@ Das Programm ist in 3 Sektionen aufgeteilt.
 1. Die _Toolbar_ oben. Enthält Buttons zur Interaktion mit dem Programm.
     - Hinzufügen: Fügt eine `.csv` Datei von dem File System hinzu.
     - Entfernen: Löscht die momentan ausgewählte Datei aus dem Programm. Die originale Datei bleibt unverändert.
-    - Speichern: Speichert das gesamte momentane Setup. Die Daten werden nicht eingebettet und über den absoluten Pfad des Systems referenziert.
+    - Speichern: Speichert das gesamte momentane Setup. Die Daten können eingebettet werden.
     - Laden: Lädt eine gespeicherte `.csviewer` Datei oder eine äquivalente `.json` Datei. Die Richtigkeit wird nicht überprüft.
     - Ansicht: Passt die x und y-Achsen so an, dass alle aktiven Graphen sichtbar sind.
 2. Die _File List_ links. Zeigt alle geladenen Dateien an.
