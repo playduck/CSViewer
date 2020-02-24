@@ -67,6 +67,7 @@ class Plot:
         cursor.setPen(pg.mkPen(color=color, width=1))
 
         plot = self.plt.plot(x, y, pen=pen, symbolPen=None, symbolBrush=None, symbol='o', symbolSize=5)
+        plot.sigClicked.connect(self.parent.highlightClicked)
         self.plt.addItem(cursor, ignoreBounds=True)
 
         return plot, cursor

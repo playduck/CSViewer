@@ -113,9 +113,20 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.plot.update(self.globalFileList)
 
     # highlight plot based on itemList
-    def highlightSelected(self, item):
+    def highlightSelected(self, listItem):
         for i in range(0, len(self.globalFileList)):
-            self.globalFileList[i].highlight = item == self.globalFileList[i].item
+            self.globalFileList[i].highlight = listItem == self.globalFileList[i].item
+        self.updatePlot()
+
+    def highlightClicked(self, plotItem):
+        for i in range(0, len(self.globalFileList)):
+            self.globalFileList[i].highlight = plotItem == self.globalFileList[i].plot
+            if plotItem == self.globalFileList[i].plot:
+                for j in range(0, self.fileList.count()):
+                    if self.globalFileList[i].item == self.fileList.item(j):
+                        print("Found list item")
+                        self.fileList.setCurrentItem(self.globalFileList[i].item)
+
         self.updatePlot()
 
     # gets selected datafile
