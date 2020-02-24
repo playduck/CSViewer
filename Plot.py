@@ -16,7 +16,7 @@ class Plot:
         pg.setConfigOptions(antialias=True, background="#1E1E1E", useWeave=True)
 
         self.win = pg.GraphicsWindow()
-        self.plt = self.win.addPlot()
+        self.plt = self.win.addPlot(enableMenu=False)
 
         self.plt.showGrid(True, True, 0.6)
         self.plt.hideButtons()
