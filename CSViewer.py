@@ -33,6 +33,23 @@ def getColor(i):
         return color
 
 
+# Custom List to Deselect Items when whitespace is clicked on
+# unfortunately needs reference to file list and update function
+# TODO: maybe emit custom signal instead?
+class DeselectableListWidget(QtWidgets.QListWidget):
+    def __init__(self, list, update, parent=None):
+        super().__init__(parent=None)
+        self.list = list
+        self.update = update
+
+    def mousePressEvent(self, event):
+        self.clearSelection()
+        for i in range(0, len(self.list)):
+            self.list[i].highlight = False
+        self.update()
+        QtWidgets.QListWidget.mousePressEvent(self, event)
+
+
 class CSViewerWindow(QtWidgets.QWidget):
     def __init__(self):
         super(CSViewerWindow, self).__init__()
@@ -92,7 +109,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.toolbar.addWidget(self.infoButton)
 
         # File list keeping track of all loaded files
-        self.fileList = QtWidgets.QListWidget()
+        self.fileList = DeselectableListWidget(self.globalFileList, self.updatePlot)
         self.fileList.setMinimumWidth(320)
         self.fileList.setMaximumWidth(350)
         self.fileList.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
