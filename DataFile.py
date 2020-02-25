@@ -194,7 +194,6 @@ class DataFile:
         # Width Spinner
         self.widthSpinner = QtWidgets.QSpinBox()
         self.widthSpinner.setRange(1, 20)
-        # width.setFixedWidth(100)
         self.widthSpinner.setValue(self.width)
         self.widthSpinner.valueChanged.connect(lambda x, who="width": self.applyChange(x, who))
         self.widthLabel = QtWidgets.QLabel("Breite:")
@@ -219,12 +218,14 @@ class DataFile:
         # Integration
         self.integrationBox = QtWidgets.QSpinBox()
         self.integrationBox.setRange(-10, 10)
+        self.integrationBox.setValue(self.integrate)
         self.integrationBox.valueChanged.connect(lambda x, who="integration": self.applyChange(x, who))
         self.integrationLabel = QtWidgets.QLabel("Integration:")
         self.integrationLabel.setBuddy(self.integrationBox)
 
         # Filter
         self.filterBox = QtWidgets.QDoubleSpinBox()
+        self.filterBox.setValue(self.filter)
         self.filterBox.valueChanged.connect(lambda x, who="filter": self.applyChange(x, who))
         self.filterLabel = QtWidgets.QLabel("Filter:")
         self.filterLabel.setBuddy(self.integrationBox)
