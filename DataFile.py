@@ -47,6 +47,7 @@ class DataFile:
         self.item = QtWidgets.QListWidgetItem()
         self.settings = QtWidgets.QDialog()
         self.plot = None
+        self.zIndex = 0
         self.cursor = None
         self.highlight = False
 

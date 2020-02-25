@@ -7,6 +7,8 @@ import numpy as np
 from PyQt5 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 
+Z_IDX_TOP = 201
+
 
 # handles all graphing
 class Plot:
@@ -24,6 +26,7 @@ class Plot:
         # vLine for vertical x-Axis cursor
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
         self.vLine.setPen((255,255,255,200))
+        self.vLine.setZValue(Z_IDX_TOP + 1)
         self.plt.addItem(self.vLine, ignoreBounds=True)
 
         # proxy needed for cursors
@@ -52,10 +55,10 @@ class Plot:
                 if self.parent.globalFileList[i].enabled:
                     considerations.append(self.parent.globalFileList[i].plot)
 
-            self.plt.autoRange(items=considerations)
+            self.plt.autoRange(padding=0.2, items=considerations)
 
     # adds a new plot
-    def initilizePlot(self, dataFile):
+    def initPlot(self, dataFile):
         x = dataFile.modData["x"]
         y = dataFile.modData["y"]
 
@@ -75,39 +78,50 @@ class Plot:
     # updates all plot styles and data
     def update(self, dataFiles):
         for i in range(0, len(dataFiles)):
+            df = dataFiles[i]
 
             color = QtGui.QColor()
-            color.setHsvF(dataFiles[i].color[0] / 360,
-                          dataFiles[i].color[1] / 100,
-                          dataFiles[i].color[2] / 100)
-            pen = pg.mkPen(color=color, width=dataFiles[i].width)
+            color.setHsvF(df.color[0] / 360,
+                          df.color[1] / 100,
+                          df.color[2] / 100)
+            pen = pg.mkPen(color=color, width=df.width)
 
             highlightColor = QtGui.QColor()
-            highlightColor.setHsvF(dataFiles[i].color[0] / 360,
-                                   dataFiles[i].color[1] / 100,
-                                   dataFiles[i].color[2] / 100, 0.2)
-            highlightPen = pg.mkPen(color=highlightColor, width=dataFiles[i].width * 4 + 10)
+            highlightColor.setHsvF(df.color[0] / 360,
+                                   df.color[1] / 100,
+                                   df.color[2] / 100, 0.2)
+            highlightPen = pg.mkPen(color=highlightColor, width=df.width * 4 + 10)
 
-            if not dataFiles[i].enabled:
-                dataFiles[i].cursor.setPen(pg.mkPen(color=(0, 0, 0, 0), width=0))
-                dataFiles[i].plot.setData(pen=None, symbolPen=None, symbolBrush=None, shadowPen=None)
+            if not df.enabled:
+                df.cursor.setPen(pg.mkPen(color=(0, 0, 0, 0), width=0))
+                df.plot.setData(pen=None, symbolPen=None, symbolBrush=None, shadowPen=None)
+                df.plot.curve.setClickable(False)
 
             else:
-                dataFiles[i].cursor.setPen(pg.mkPen(color=color, width=1))
+                df.cursor.setPen(pg.mkPen(color=color, width=1))
+                df.cursor.setZValue(df.zIndex)
+                df.plot.curve.setClickable(True, width=df.width * 4 + 10)
 
-                if dataFiles[i].interpolation == "Keine":
-                    if dataFiles[i].highlight:
-                        dataFiles[i].plot.setData(pen=None, symbolPen=pen, symbolBrush=highlightColor, shadowPen=None)
+                if df.interpolation == "Keine":
+                    if df.highlight:
+                        df.plot.setData(pen=None, symbolPen=pen, symbolBrush=highlightColor, shadowPen=None)
                     else:
-                        dataFiles[i].plot.setData(pen=None, symbolPen=pen, symbolBrush=color, shadowPen=None)
+                        df.plot.setData(pen=None, symbolPen=pen, symbolBrush=color, shadowPen=None)
 
                 else:
-                    dataFiles[i].plot.setData(pen=pen, symbolPen=None, symbolBrush=None, shadowPen=None)
+                    df.plot.setData(pen=pen, symbolPen=None, symbolBrush=None, shadowPen=None)
 
-                    if dataFiles[i].highlight:
-                        dataFiles[i].plot.setData(shadowPen=highlightPen)
+                    if df.highlight:
+                        df.plot.setData(shadowPen=highlightPen)
 
-            dataFiles[i].plot.setData(dataFiles[i].modData["x"], dataFiles[i].modData["y"])
+                if df.highlight:
+                    df.cursor.setZValue(Z_IDX_TOP)
+                    df.plot.setZValue(Z_IDX_TOP)
+                else:
+                    df.cursor.setZValue(df.zIndex)
+                    df.plot.setZValue(df.zIndex)
+
+            df.plot.setData(df.modData["x"], df.modData["y"])
 
     # updates cursors and info text
     def mouseMoved(self, evt):
@@ -126,7 +140,7 @@ class Plot:
 
                     self.parent.globalFileList[i].cursor.setPos(self.parent.globalFileList[i].modData["y"][index])
 
-                    info += "\t  <span style='color: hsv({:d},{:d}%,{:d}%);'>y={:4.2f}</span>".format(
+                    info += "\t  <span style='color: hsv({:d},{:d}%,{:d}%);'>y={:5.3f}</span>".format(
                         self.parent.globalFileList[i].color[0],
                         self.parent.globalFileList[i].color[1],
                         self.parent.globalFileList[i].color[2],
