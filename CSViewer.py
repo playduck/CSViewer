@@ -95,7 +95,10 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.fileList = QtWidgets.QListWidget()
         self.fileList.setMinimumWidth(320)
         self.fileList.setMaximumWidth(350)
+        self.fileList.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        self.fileList.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.fileList.itemClicked.connect(self.highlightSelected)
+        self.fileList.installEventFilter(self)
 
         # adding widgets and layouts
         self.subLayout.addWidget(self.fileList)
@@ -112,7 +115,30 @@ class CSViewerWindow(QtWidgets.QWidget):
     def updatePlot(self):
         self.plot.update(self.globalFileList)
 
-    # highlight plot based on itemList
+    # Handle fileList Drag and Drop reordering
+    def eventFilter(self, object, event):
+        if object is self.fileList:
+            if event.type() == QtCore.QEvent.ChildAdded:
+                event.accept()
+
+            if event.type() == QtCore.QEvent.ChildRemoved:
+                event.accept()
+                self.reorder()
+            return False
+        return False
+
+    # sets z-index based on fileList order
+    def reorder(self):
+        for i in range(0, len(self.globalFileList)):
+            for j in range(0, self.fileList.count()):
+
+                if self.globalFileList[i].item == self.fileList.item(j):
+                    self.globalFileList[i].zIndex = (Plot.Z_IDX_TOP - j - 1)
+
+        self.globalFileList.sort(key=lambda df: df.zIndex, reverse=True)
+
+        self.updatePlot()
+
     def highlightSelected(self, listItem):
         for i in range(0, len(self.globalFileList)):
             self.globalFileList[i].highlight = listItem == self.globalFileList[i].item
@@ -121,10 +147,10 @@ class CSViewerWindow(QtWidgets.QWidget):
     def highlightClicked(self, plotItem):
         for i in range(0, len(self.globalFileList)):
             self.globalFileList[i].highlight = plotItem == self.globalFileList[i].plot
+
             if plotItem == self.globalFileList[i].plot:
                 for j in range(0, self.fileList.count()):
                     if self.globalFileList[i].item == self.fileList.item(j):
-                        print("Found list item")
                         self.fileList.setCurrentItem(self.globalFileList[i].item)
 
         self.updatePlot()
@@ -157,7 +183,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.fileList.addItem(temp[0])
         self.fileList.setItemWidget(temp[0], temp[1])
 
-        self.plot.update(self.globalFileList)
+        self.reorder()
 
         return df
 
@@ -170,7 +196,7 @@ class CSViewerWindow(QtWidgets.QWidget):
             df = DataFile.DataFile(filename, self, getColor(len(self.globalFileList)))
             df.initSettings()
             df.calculateData()
-            df.plot, df.cursor = self.plot.initilizePlot(df)
+            df.plot, df.cursor = self.plot.initPlot(df)
             self.globalFileList.append(df)
             self.addFileList(df)
 
@@ -275,7 +301,7 @@ class CSViewerWindow(QtWidgets.QWidget):
                     df.initSettings()
                     df.calculateData()
 
-                    df.plot, df.cursor = self.plot.initilizePlot(df)
+                    df.plot, df.cursor = self.plot.initPlot(df)
                     self.globalFileList.append(df)
                     self.addFileList(df)
                 else:
