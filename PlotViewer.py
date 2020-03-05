@@ -10,8 +10,37 @@ import pyqtgraph as pg
 Z_IDX_TOP = 201
 
 
+class Graph(pg.PlotCurveItem):
+    sigUpdated = QtCore.pyqtSignal()
+    def __init__(self, dataFile, *args, **kwds):
+
+        self.dataFile = dataFile
+
+        pg.PlotCurveItem.__init__(self, **kwds)
+        pg.PlotCurveItem.setData(self, *args)
+
+    def mouseDragEvent(self, ev):
+
+        if self.dataFile.highlight:
+            if ev.button() != QtCore.Qt.LeftButton:
+                ev.ignore()
+                return
+
+            delta = ev.pos() - ev.lastPos()
+            self.dataFile.xOffset += delta[0]
+            self.dataFile.yOffset += delta[1]
+
+            self.dataFile.calculateData()
+            self.dataFile.updateUIData()
+
+            self.sigUpdated.emit()
+            ev.accept()
+        else:
+            ev.ignore()
+
+
 # handles all graphing
-class Plot:
+class PlotViewer:
     def __init__(self, toolbar, parent):
         self.parent = parent
 
@@ -22,6 +51,7 @@ class Plot:
 
         self.plt.showGrid(True, True, 0.6)
         self.plt.hideButtons()
+        self.plt.autoRange(padding=0.2)
 
         # vLine for vertical x-Axis cursor
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
@@ -70,8 +100,13 @@ class Plot:
         cursor = pg.InfiniteLine(angle=0, movable=False)
         cursor.setPen(pg.mkPen(color=color, width=1))
 
-        plot = self.plt.plot(x, y, pen=pen, symbolPen=None, symbolBrush=None, symbol='o', symbolSize=5)
+        # plot = self.plt.plot(x, y, pen=pen, symbolPen=None, symbolBrush=None, symbol='o', symbolSize=5)
+
+        plot = Graph(dataFile, np.array(x), np.array(y), pen=pen, symbolPen=None, symbolBrush=None, symbol='o', symbolSize=5)
         plot.sigClicked.connect(self.parent.highlightClicked)
+        plot.sigUpdated.connect(self.parent.updatePlot)
+
+        self.plt.addItem(plot)
         self.plt.addItem(cursor, ignoreBounds=True)
 
         return plot, cursor
@@ -96,12 +131,12 @@ class Plot:
             if not df.enabled:
                 df.cursor.setPen(pg.mkPen(color=(0, 0, 0, 0), width=0))
                 df.plot.setData(pen=None, symbolPen=None, symbolBrush=None, shadowPen=None)
-                df.plot.curve.setClickable(False)
+                # df.plot.curve.setClickable(False)
 
             else:
                 df.cursor.setPen(pg.mkPen(color=color, width=1))
                 df.cursor.setZValue(df.zIndex)
-                df.plot.curve.setClickable(True, width=df.width * 4 + 10)
+                # df.plot.curve.setClickable(True, width=df.width * 4 + 10)
 
                 if df.interpolation == "Keine":
                     if df.highlight:
@@ -122,7 +157,7 @@ class Plot:
                     df.cursor.setZValue(df.zIndex)
                     df.plot.setZValue(df.zIndex)
 
-            df.plot.setData(df.modData["x"], df.modData["y"])
+            df.plot.setData(np.array(df.modData["x"]), np.array(df.modData["y"]))
 
     # updates cursors and info text
     def mouseMoved(self, evt):

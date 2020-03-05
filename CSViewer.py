@@ -6,7 +6,7 @@
 import sys
 import os.path
 import json
-import Plot
+import PlotViewer
 import DataFile
 import pandas as pd
 from PyQt5 import QtGui, QtCore, QtWidgets
@@ -99,7 +99,7 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         # Viewer handles the plotting section
         self.viewer = QtWidgets.QVBoxLayout()
-        self.plot = Plot.Plot(self.toolbar, self)
+        self.plot = PlotViewer.PlotViewer(self.toolbar, self)
         self.viewer.addLayout(self.plot.layout)
 
         # Spacer to push info button to the right
@@ -161,7 +161,7 @@ class CSViewerWindow(QtWidgets.QWidget):
             for j in range(0, self.fileList.count()):
 
                 if self.globalFileList[i].item == self.fileList.item(j):
-                    self.globalFileList[i].zIndex = (Plot.Z_IDX_TOP - j - 1)
+                    self.globalFileList[i].zIndex = (PlotViewer.Z_IDX_TOP - j - 1)
 
         self.globalFileList.sort(key=lambda df: df.zIndex, reverse=True)
 

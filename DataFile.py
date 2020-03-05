@@ -79,10 +79,6 @@ class DataFile:
         # set Interpolation Ammount Box
         self.interpolationAmountBox.setRange(len(x), len(x) + self.interpolationAmount * 10)
 
-        # Add Offsets
-        x = x + self.xOffset
-        y = y + self.yOffset
-
         # apply gaussian filter
         if self.filter > 0:
             y = gaussian_filter1d(y, sigma=self.filter)
@@ -107,8 +103,19 @@ class DataFile:
             y = spl(xnew)
             x = xnew
 
+        # Add Offsets
+        x = x + self.xOffset
+        y = y + self.yOffset
+
         # save data
         self.modData = pd.DataFrame({'x': x, 'y': y})
+
+    def updateUIData(self):
+        self.x_offset_inline.setValue(self.xOffset)
+
+        self.x_offset.setValue(self.xOffset)
+        self.y_offset.setValue(self.yOffset)
+
 
     # displays the list item in the file list
     def showListItem(self):
@@ -134,15 +141,15 @@ class DataFile:
         self.layout.addWidget(self.label)
         self.layout.addStretch(1)
 
-        self.offset = SuperSpinner(None)
-        self.offset.setRange(-9999, 9999)
-        self.offset.setValue(self.xOffset)
-        self.offset.setFixedWidth(75)
-        self.offset.valueChanged.connect(lambda x, who="xOffset": self.applyChange(x, who))
-        self.offset_label = QtWidgets.QLabel("Offset:")
-        self.offset_label.setBuddy(self.offset)
-        self.layout.addWidget(self.offset_label)
-        self.layout.addWidget(self.offset)
+        self.x_offset_inline = SuperSpinner(None)
+        self.x_offset_inline.setRange(-9999, 9999)
+        self.x_offset_inline.setValue(self.xOffset)
+        self.x_offset_inline.setFixedWidth(75)
+        self.x_offset_inline.valueChanged.connect(lambda x, who="xOffset": self.applyChange(x, who))
+        self.x_offset_inline_label = QtWidgets.QLabel("X-Offset:")
+        self.x_offset_inline_label.setBuddy(self.x_offset_inline)
+        self.layout.addWidget(self.x_offset_inline_label)
+        self.layout.addWidget(self.x_offset_inline)
 
         self.settingsBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/settings.png"), "")
         self.settingsBtn.clicked.connect(self.showSettings)
@@ -183,6 +190,23 @@ class DataFile:
         )
 
         self.layout = QtWidgets.QGridLayout()
+
+        # Offsets
+        self.x_offset = SuperSpinner(None)
+        self.x_offset.setRange(-9999, 9999)
+        self.x_offset.setValue(self.xOffset)
+        self.x_offset.setFixedWidth(75)
+        self.x_offset.valueChanged.connect(lambda x, who="xOffset": self.applyChange(x, who))
+        self.x_offset_label = QtWidgets.QLabel("x-Offset:")
+        self.x_offset_label.setBuddy(self.x_offset)
+
+        self.y_offset = SuperSpinner(None)
+        self.y_offset.setRange(-9999, 9999)
+        self.y_offset.setValue(self.yOffset)
+        self.y_offset.setFixedWidth(75)
+        self.y_offset.valueChanged.connect(lambda y, who="yOffset": self.applyChange(y, who))
+        self.y_offset_label = QtWidgets.QLabel("y-Offset:")
+        self.y_offset_label.setBuddy(self.y_offset)
 
         # Color Picker
         self.colorPickerBtn = QtWidgets.QPushButton("  ")
@@ -239,19 +263,29 @@ class DataFile:
         self.OKButton.setDefault(True)
         self.OKButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
-        self.layout.addWidget(self.colorPickerLabel,            0, 0)
-        self.layout.addWidget(self.colorPickerBtn,              0, 1)
-        self.layout.addWidget(self.widthLabel,                  1, 0)
-        self.layout.addWidget(self.widthSpinner,                1, 1)
-        self.layout.addWidget(self.interpolationLabel,          2, 0)
-        self.layout.addWidget(self.interpolationBox,            2, 1)
-        self.layout.addWidget(self.interpolationAmountLabel,    3, 0)
-        self.layout.addWidget(self.interpolationAmountBox,      3, 1)
-        self.layout.addWidget(self.filterLabel,                 4, 0)
-        self.layout.addWidget(self.filterBox,                   4, 1)
-        self.layout.addWidget(self.integrationLabel,            5, 0)
-        self.layout.addWidget(self.integrationBox,              5, 1)
-        self.layout.addWidget(self.OKButton,                    6, 1)
+        self.layout.addWidget(self.x_offset_label,              0, 0)
+        self.layout.addWidget(self.x_offset,                    0, 1)
+        self.layout.addWidget(self.y_offset_label,              1, 0)
+        self.layout.addWidget(self.y_offset,                    1, 1)
+
+        self.layout.addWidget(self.colorPickerLabel,            2, 0)
+        self.layout.addWidget(self.colorPickerBtn,              2, 1)
+
+        self.layout.addWidget(self.widthLabel,                  3, 0)
+        self.layout.addWidget(self.widthSpinner,                3, 1)
+
+        self.layout.addWidget(self.interpolationLabel,          4, 0)
+        self.layout.addWidget(self.interpolationBox,            4, 1)
+        self.layout.addWidget(self.interpolationAmountLabel,    5, 0)
+        self.layout.addWidget(self.interpolationAmountBox,      5, 1)
+
+        self.layout.addWidget(self.filterLabel,                 6, 0)
+        self.layout.addWidget(self.filterBox,                   6, 1)
+
+        self.layout.addWidget(self.integrationLabel,            7, 0)
+        self.layout.addWidget(self.integrationBox,              7, 1)
+
+        self.layout.addWidget(self.OKButton,                    8, 1)
 
         self.settings.setLayout(self.layout)
 
@@ -286,7 +320,7 @@ class DataFile:
         elif who == "xOffset":
             self.xOffset = evt
         elif who == "yOffset":
-            self.xOffset = evt
+            self.yOffset = evt
         elif who == "filter":
             self.filter = evt
 
