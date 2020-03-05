@@ -37,9 +37,9 @@ def getColor(i):
 # unfortunately needs reference to file list and update function
 # TODO: maybe emit custom signal instead?
 class DeselectableListWidget(QtWidgets.QListWidget):
-    def __init__(self, list, update, parent=None):
+    def __init__(self, fileList, update, parent=None):
         super().__init__(parent=None)
-        self.list = list
+        self.list = fileList
         self.update = update
 
     def mousePressEvent(self, event):
@@ -74,20 +74,25 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         self.addNew = QtWidgets.QPushButton(QtGui.QIcon("./assets/add_new.png"), "Hinzufügen")
         self.addNew.clicked.connect(self.openFileNameDialog)
+        self.addNew.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.addNew)
 
         self.removeSelectedBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/delete_select.png"), "Löschen")
         self.removeSelectedBtn.clicked.connect(self.deleteSelected)
+        self.removeSelectedBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+
         self.toolbar.addWidget(self.removeSelectedBtn)
 
         self.toolbar.addSeparator()
 
         self.saveBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/save.png"), "Speichern")
         self.saveBtn.clicked.connect(self.saveOptions)
+        self.saveBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.saveBtn)
 
         self.loadBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/load.png"), "Laden")
         self.loadBtn.clicked.connect(self.load)
+        self.loadBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.loadBtn)
 
         self.toolbar.addSeparator()
@@ -106,10 +111,11 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         self.infoButton = QtWidgets.QPushButton(QtGui.QIcon("./assets/help.png"), "Info")
         self.infoButton.clicked.connect(self.showInfo)
+        self.infoButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.infoButton)
 
         # File list keeping track of all loaded files
-        self.fileList = DeselectableListWidget(self.globalFileList, self.updatePlot)
+        self.fileList = DeselectableListWidget(self.globalFileList, self.highlightDeSelect)
         self.fileList.setMinimumWidth(320)
         self.fileList.setMaximumWidth(350)
         self.fileList.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
@@ -126,6 +132,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.setLayout(self.mainLayout)
         self.show()
 
+        self.updateDisabledButtons()
         self.updatePlot()
 
     # update drawing and redraw
@@ -144,6 +151,10 @@ class CSViewerWindow(QtWidgets.QWidget):
             return False
         return False
 
+    def onFileListUpdate(self):
+        self.reorder()
+        self.updateDisabledButtons()
+
     # sets z-index based on fileList order
     def reorder(self):
         for i in range(0, len(self.globalFileList)):
@@ -156,12 +167,29 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         self.updatePlot()
 
+    def updateDisabledButtons(self):
+        disabled = not (self.fileList.count() > 0)
+
+        self.saveBtn.setDisabled(disabled)
+        self.plot.resetBtn.setDisabled(disabled)
+
+        if disabled:    # only disable on no files, removing only works when any item is selected
+            self.removeSelectedBtn.setDisabled(True)
+
+    def highlightDeSelect(self):
+        self.removeSelectedBtn.setDisabled(True)
+        self.updatePlot()
+
     def highlightSelected(self, listItem):
+        self.removeSelectedBtn.setDisabled(False)
+
         for i in range(0, len(self.globalFileList)):
             self.globalFileList[i].highlight = listItem == self.globalFileList[i].item
         self.updatePlot()
 
     def highlightClicked(self, plotItem):
+        self.removeSelectedBtn.setDisabled(False)
+
         for i in range(0, len(self.globalFileList)):
             self.globalFileList[i].highlight = plotItem == self.globalFileList[i].plot
 
@@ -194,13 +222,15 @@ class CSViewerWindow(QtWidgets.QWidget):
         del df
         self.plot.update(self.globalFileList)
 
+        self.onFileListUpdate()
+
     # adds a datafile from a file
     def addFileList(self, df):
         temp = df.showListItem()
         self.fileList.addItem(temp[0])
         self.fileList.setItemWidget(temp[0], temp[1])
 
-        self.reorder()
+        self.onFileListUpdate()
 
         return df
 
@@ -349,6 +379,10 @@ class CSViewerWindow(QtWidgets.QWidget):
             In python 3.7 mit pyqt, qtmodern, pyqtgraph, numpy, pandas und scipy, sowie mit Hilfe von Stackoverflow :).</p>
         """)
         msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+
+        for button in msgBox.buttons():
+            button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+
         msgBox.exec_()
 
 

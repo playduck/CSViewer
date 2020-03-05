@@ -33,10 +33,11 @@ class Plot:
         self.proxy = pg.SignalProxy(self.plt.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
 
         # Custom Toolbar Buttons
-        self.btnReset = QtWidgets.QPushButton(QtGui.QIcon("./assets/fit_screen.png"), "Anpassen")
-        self.btnReset.clicked.connect(lambda x, who="autoscale": self.toolbarHandler(x, who))
+        self.resetBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/fit_screen.png"), "Anpassen")
+        self.resetBtn.clicked.connect(lambda x, who="autoscale": self.toolbarHandler(x, who))
+        self.resetBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
-        toolbar.addWidget(self.btnReset)
+        toolbar.addWidget(self.resetBtn)
 
         # Info Region below Plot
         self.info = QtWidgets.QLabel()

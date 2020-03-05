@@ -44,6 +44,7 @@ class DataFile:
         self.handler = handler
 
         self.frame = QtWidgets.QWidget()
+        self.frame.setCursor(QtGui.QCursor(QtCore.Qt.SizeVerCursor))
         self.item = QtWidgets.QListWidgetItem()
         self.settings = QtWidgets.QDialog()
         self.plot = None
@@ -120,6 +121,7 @@ class DataFile:
         self.enable.setChecked(self.enabled)
         self.enable.stateChanged.connect(self.enableHandle)
         self.enable.setObjectName("enable_checkbox")
+        self.enable.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.enable.setStyleSheet(
             "background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(
                 self.color[0], self.color[1],self.color[2]))
@@ -145,6 +147,7 @@ class DataFile:
         self.settingsBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/settings.png"), "")
         self.settingsBtn.clicked.connect(self.showSettings)
         self.settingsBtn.setFlat(True)
+        self.settingsBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.layout.addWidget(self.settingsBtn)
 
         self.layout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
@@ -167,8 +170,8 @@ class DataFile:
         framePos = self.frame.geometry()
         windowPos = self.handler.window.pos()
 
-        x = windowPos.x() + 150
-        y = windowPos.y() + 1 * framePos.y() + 130  # offsets only work for fusion style
+        x = windowPos.x() + 130
+        y = windowPos.y() + 67 + framePos.y() + framePos.height()
 
         self.settings.move(x, y)
         self.settings.exec_()
@@ -184,9 +187,9 @@ class DataFile:
         # Color Picker
         self.colorPickerBtn = QtWidgets.QPushButton("  ")
         self.colorPickerBtn.setObjectName("color_select_button")
+        self.colorPickerBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.colorPickerBtn.setStyleSheet("background-color: hsv({:d},{:d}%,{:d}%); color: black;".format(
             self.color[0], self.color[1], self.color[2]))
-
         self.colorPickerBtn.clicked.connect(lambda x, who="color": self.applyChange(x, who))
         self.colorPickerLabel = QtWidgets.QLabel("Farbe:")
         self.colorPickerLabel.setBuddy(self.colorPickerBtn)
@@ -234,6 +237,7 @@ class DataFile:
         self.OKButton = QtWidgets.QPushButton("&Fertig")
         self.OKButton.clicked.connect(self.settings.close)
         self.OKButton.setDefault(True)
+        self.OKButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
         self.layout.addWidget(self.colorPickerLabel,            0, 0)
         self.layout.addWidget(self.colorPickerBtn,              0, 1)

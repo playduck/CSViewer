@@ -7,7 +7,7 @@ QToolBar::separator {
 
 QPushButton {
     border-radius: 2px;
-    icon-size: 20px;
+    icon-size: 22px;
     padding: 5px;
     margin: 2px;
     background-color: rgb(30, 30, 30);
@@ -22,6 +22,11 @@ QPushButton:pressed {
 QPushButton:flat {
     border: none;
     background-color: transparent;
+}
+QPushButton:disabled,
+QPushButton:disabled:hover {
+    color: rgb(100, 100, 100);
+    background-color: rgb(45,45,45);
 }
 
 QListView {
