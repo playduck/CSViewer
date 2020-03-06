@@ -35,7 +35,8 @@ QListView {
 }
 QListView::item:selected {
     border: 1px solid black;
+    background-color: rgb(40, 40, 40);
 }
 QListView::item:selected:active {
-    background: rgb(40, 40, 40);
+    background: rgb(56, 56, 56);
 }
