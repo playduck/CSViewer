@@ -27,8 +27,18 @@ class Graph(pg.PlotCurveItem):
                 return
 
             delta = ev.pos() - ev.lastPos()
-            self.dataFile.xOffset += delta[0]
-            self.dataFile.yOffset += delta[1]
+            direction = ev.pos() - ev.buttonDownPos()
+
+            # snapping isn't quite optimal
+            # requires use of tempX/tempY and committing those to xOffset/yOffset on mouse up
+            if ev.modifiers() == QtCore.Qt.ShiftModifier:
+                if abs(direction[0]) > abs(direction[1]):
+                    self.dataFile.xOffset += delta[0]
+                else:
+                    self.dataFile.yOffset += delta[1]
+            else:
+                self.dataFile.xOffset += delta[0]
+                self.dataFile.yOffset += delta[1]
 
             self.dataFile.calculateData()
             self.dataFile.updateUIData()
