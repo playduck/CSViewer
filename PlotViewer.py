@@ -54,9 +54,10 @@ class PlotViewer:
     def __init__(self, toolbar, parent):
         self.parent = parent
 
-        pg.setConfigOptions(antialias=True, background="#1E1E1E", useWeave=True)
+        pg.setConfigOptions(antialias=True, background=None, useWeave=True)
 
         self.win = pg.GraphicsWindow()
+        self.win.setObjectName("plotWindow")
         self.plt = self.win.addPlot(enableMenu=False)
 
         self.plt.showGrid(True, True, 0.6)
@@ -82,6 +83,7 @@ class PlotViewer:
         # Info Region below Plot
         self.info = QtWidgets.QLabel()
         self.info.setAlignment(QtCore.Qt.AlignCenter)
+        self.info.setObjectName("infoWindow")
 
         # Add to Layout
         self.layout = QtWidgets.QVBoxLayout()

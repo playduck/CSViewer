@@ -117,7 +117,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         # File list keeping track of all loaded files
         self.fileList = DeselectableListWidget(self.globalFileList)
         self.fileList.setMinimumWidth(330)
-        self.fileList.setMaximumWidth(450)
+        self.fileList.setMaximumWidth(550)
         self.fileList.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.fileList.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.fileList.itemClicked.connect(self.highlightSelected)
@@ -393,6 +393,11 @@ class CSViewerWindow(QtWidgets.QWidget):
 
 # main entry point
 if __name__ == "__main__":
+    # setup High DPI Support
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
+    # Create main App
     app = QtWidgets.QApplication(sys.argv)
 
     # show splash screen
@@ -418,7 +423,7 @@ if __name__ == "__main__":
 
     # load custom styles
     with open("./style.qss", "r") as fh:
-        gui.setStyleSheet(fh.read())
+        mw.setStyleSheet(fh.read())
 
     mw.show()
 
