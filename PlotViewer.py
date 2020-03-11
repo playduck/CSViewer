@@ -145,7 +145,7 @@ class PlotViewer:
 
             else:
                 #df.cursor.setPen(pg.mkPen(color=color, width=1))
-                df.cursor.setPen(pg.mkPen(color=color, width=df.width))
+                df.cursor.setPen(pg.mkPen(color=color, width=max(1, df.width / 2)))
 
                 df.cursor.setZValue(df.zIndex)
                 # df.plot.curve.setClickable(True, width=df.width * 4 + 10)
