@@ -44,8 +44,8 @@ class DeselectableListWidget(QtWidgets.QListWidget):
 
     def mousePressEvent(self, event):
         self.clearSelection()
-        for i in range(0, len(self.list)):
-            self.list[i].highlight = False
+        for df in self.list:
+            df.highlight = False
         self.sigUpdated.emit()
         QtWidgets.QListWidget.mousePressEvent(self, event)
 
@@ -158,11 +158,11 @@ class CSViewerWindow(QtWidgets.QWidget):
 
     # sets z-index based on fileList order
     def reorder(self):
-        for i in range(0, len(self.globalFileList)):
+        for df in self.globalFileList:
             for j in range(0, self.fileList.count()):
 
-                if self.globalFileList[i].item == self.fileList.item(j):
-                    self.globalFileList[i].zIndex = (PlotViewer.Z_IDX_TOP - j - 1)
+                if df.item == self.fileList.item(j):
+                    df.zIndex = (PlotViewer.Z_IDX_TOP - j - 1)
 
         self.globalFileList.sort(key=lambda df: df.zIndex, reverse=True)
 
@@ -184,20 +184,21 @@ class CSViewerWindow(QtWidgets.QWidget):
     def highlightSelected(self, listItem):
         self.removeSelectedBtn.setDisabled(False)
 
-        for i in range(0, len(self.globalFileList)):
-            self.globalFileList[i].highlight = listItem == self.globalFileList[i].item
+        for df in self.globalFileList:
+            df.highlight = (listItem == df.item)
+
         self.updatePlot()
 
     def highlightClicked(self, plotItem):
         self.removeSelectedBtn.setDisabled(False)
 
-        for i in range(0, len(self.globalFileList)):
-            self.globalFileList[i].highlight = plotItem == self.globalFileList[i].plot
+        for df in self.globalFileList:
+            df.highlight = plotItem == df.plot
 
-            if plotItem == self.globalFileList[i].plot:
+            if plotItem == df.plot:
                 for j in range(0, self.fileList.count()):
-                    if self.globalFileList[i].item == self.fileList.item(j):
-                        self.fileList.setCurrentItem(self.globalFileList[i].item)
+                    if df.item == self.fileList.item(j):
+                        self.fileList.setCurrentItem(df.item)
 
         self.updatePlot()
 
@@ -297,7 +298,7 @@ class CSViewerWindow(QtWidgets.QWidget):
             file = open(filename, "w")
 
             dataMainArray = []
-            for i, df in enumerate(self.globalFileList):
+            for df in self.globalFileList:
                 data = {
                     "filename": df.filename,
                     "enabled": df.enabled,
@@ -330,7 +331,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         if filename:
             file = open(filename, "r")
             dataJson = json.loads(file.read())
-            for i, data in enumerate(dataJson["data"]):
+            for data in dataJson["data"]:
                 if os.path.isfile(data["filename"]) or data["dataEmbed"]:
 
                     color = data["color"] if data["color"] else getColor(len(self.globalFileList))
