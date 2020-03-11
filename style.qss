@@ -44,10 +44,10 @@ QListView {
 }
 QListView::item:selected {
     border: 1px solid palette(Highlight);
-    background-color: palette(Shadow);
+    background-color: palette(Midlight);
 }
 QListView::item:selected:active {
-    background: palette(Shadow);
+    background: palette(Midlight);
 }
 
 #plotWindow {

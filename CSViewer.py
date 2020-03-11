@@ -406,7 +406,7 @@ if __name__ == "__main__":
     splash.show()
 
     # set style (order is important)
-    qtmodern.styles.dark(app)
+    qtmodern.styles.light(app)
     # initialize program
     gui = CSViewerWindow()
 
