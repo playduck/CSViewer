@@ -108,7 +108,7 @@ class PlotViewer:
 
         pen = pg.mkPen(color=color, width=dataFile.width)
         cursor = pg.InfiniteLine(angle=0, movable=False)
-        cursor.setPen(pg.mkPen(color=color, width=1))
+        cursor.setPen(pg.mkPen(color=color, width=dataFile.width))
 
         # plot = self.plt.plot(x, y, pen=pen, symbolPen=None, symbolBrush=None, symbol='o', symbolSize=5)
 
@@ -144,7 +144,9 @@ class PlotViewer:
                 # df.plot.curve.setClickable(False)
 
             else:
-                df.cursor.setPen(pg.mkPen(color=color, width=1))
+                #df.cursor.setPen(pg.mkPen(color=color, width=1))
+                df.cursor.setPen(pg.mkPen(color=color, width=df.width))
+
                 df.cursor.setZValue(df.zIndex)
                 # df.plot.curve.setClickable(True, width=df.width * 4 + 10)
 
