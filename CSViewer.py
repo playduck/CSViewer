@@ -116,8 +116,8 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         # File list keeping track of all loaded files
         self.fileList = DeselectableListWidget(self.globalFileList)
-        self.fileList.setMinimumWidth(320)
-        self.fileList.setMaximumWidth(350)
+        self.fileList.setMinimumWidth(330)
+        self.fileList.setMaximumWidth(450)
         self.fileList.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.fileList.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.fileList.itemClicked.connect(self.highlightSelected)
