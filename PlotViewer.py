@@ -10,14 +10,14 @@ import pyqtgraph as pg
 Z_IDX_TOP = 201
 
 
-class Graph(pg.PlotCurveItem):
+class Graph(pg.PlotDataItem):
     sigUpdated = QtCore.pyqtSignal()
     def __init__(self, dataFile, *args, **kwds):
 
         self.dataFile = dataFile
 
-        pg.PlotCurveItem.__init__(self, **kwds)
-        pg.PlotCurveItem.setData(self, *args)
+        pg.PlotDataItem.__init__(self, **kwds)
+        pg.PlotDataItem.setData(self, *args)
 
     def mouseDragEvent(self, ev):
 
