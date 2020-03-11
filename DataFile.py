@@ -38,10 +38,15 @@ class SuperSpinner(QtWidgets.QDoubleSpinBox):
 
 
 # Handles one data file and its processing
-class DataFile:
-    def __init__(self, filename, handler, color):
+# inherits from QWidget to emit signals
+class DataFile(QtWidgets.QWidget):
+    sigPlotUpdate = QtCore.pyqtSignal()
+
+    def __init__(self, filename, color, parent=None):
+        super(DataFile, self).__init__(parent)
+
         self.filename = filename
-        self.handler = handler
+        self.parent = parent
 
         self.frame = QtWidgets.QWidget()
         self.frame.setCursor(QtGui.QCursor(QtCore.Qt.SizeVerCursor))
@@ -171,11 +176,11 @@ class DataFile:
 
     def enableHandle(self, value):
         self.enabled = value
-        self.handler.updatePlot()
+        self.sigPlotUpdate.emit()
 
     def showSettings(self):
         framePos = self.frame.geometry()
-        windowPos = self.handler.window.pos()
+        windowPos = self.parent.window.pos()
 
         x = windowPos.x() + 130
         y = windowPos.y() + 67 + framePos.y() + framePos.height()
@@ -325,4 +330,4 @@ class DataFile:
             self.filter = evt
 
         self.calculateData()
-        self.handler.updatePlot()
+        self.sigPlotUpdate.emit()

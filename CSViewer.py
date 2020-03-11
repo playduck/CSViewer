@@ -34,19 +34,19 @@ def getColor(i):
 
 
 # Custom List to Deselect Items when whitespace is clicked on
-# unfortunately needs reference to file list and update function
-# TODO: maybe emit custom signal instead?
+
 class DeselectableListWidget(QtWidgets.QListWidget):
-    def __init__(self, fileList, update, parent=None):
+    sigUpdated = QtCore.pyqtSignal()
+
+    def __init__(self, fileList, parent=None):
         super().__init__(parent=None)
         self.list = fileList
-        self.update = update
 
     def mousePressEvent(self, event):
         self.clearSelection()
         for i in range(0, len(self.list)):
             self.list[i].highlight = False
-        self.update()
+        self.sigUpdated.emit()
         QtWidgets.QListWidget.mousePressEvent(self, event)
 
 
@@ -115,12 +115,13 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.toolbar.addWidget(self.infoButton)
 
         # File list keeping track of all loaded files
-        self.fileList = DeselectableListWidget(self.globalFileList, self.highlightDeSelect)
+        self.fileList = DeselectableListWidget(self.globalFileList)
         self.fileList.setMinimumWidth(320)
         self.fileList.setMaximumWidth(350)
         self.fileList.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.fileList.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.fileList.itemClicked.connect(self.highlightSelected)
+        self.fileList.sigUpdated.connect(self.highlightDeSelect)
         self.fileList.installEventFilter(self)
 
         # adding widgets and layouts
@@ -240,10 +241,12 @@ class CSViewerWindow(QtWidgets.QWidget):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                             "CSV Dateien (*.csv);;Alle Dateinen (*)", options=options)
         if filename:
-            df = DataFile.DataFile(filename, self, getColor(len(self.globalFileList)))
+            df = DataFile.DataFile(filename, getColor(len(self.globalFileList)), self)
+            df.sigPlotUpdate.connect(self.updatePlot)
             df.initSettings()
             df.calculateData()
             df.plot, df.cursor = self.plot.initPlot(df)
+
             self.globalFileList.append(df)
             self.addFileList(df)
 
@@ -332,7 +335,7 @@ class CSViewerWindow(QtWidgets.QWidget):
 
                     color = data["color"] if data["color"] else getColor(len(self.globalFileList))
 
-                    df = DataFile.DataFile(data["filename"], self, color)
+                    df = DataFile.DataFile(data["filename"], color, self)
                     df.enabled = data["enabled"]
                     df.width = data["width"]
                     df.xOffset = data["xOffset"]
@@ -345,6 +348,7 @@ class CSViewerWindow(QtWidgets.QWidget):
                     if data["dataEmbed"]:
                         df.data = pd.read_json(data["dataEmbed"])
 
+                    df.sigPlotUpdate.connect(self.updatePlot)
                     df.initSettings()
                     df.calculateData()
 
