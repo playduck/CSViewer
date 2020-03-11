@@ -58,4 +58,4 @@ Das Programm ist in 3 Sektionen aufgeteilt.
 - Testen auf Linux (?)
 - Cursor beim Verschieben von Graphen ändern
 - Graph und DataFile Klassen zusammenfassen, villeicht durch SignalProxies
-- parent/handler Referenzen durch Qt Signale ersetzen
+- ~~parent/handler Referenzen durch Qt Signale ersetzen~~
