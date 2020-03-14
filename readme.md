@@ -1,4 +1,4 @@
-![CSViewer](./assets/logo.png)
+![CSViewer](./assets/banner.png)
 
 PyQt GUI um `.csv` Dateien zu visualisieren.
 
@@ -7,8 +7,26 @@ PyQt GUI um `.csv` Dateien zu visualisieren.
 CSViewer benötigt python 3.
 Das System muss außerdem von PyQt5 unterstützt werden.
 
-- `pip install -r requirements.txt`
-- `python CSViewer.py`
+### mit make
+
+make wird nicht unbedingt benötigt, macht den gesamten Prozess jedoch wesentlich einfacher.
+
+- `make init` venv initialisieren und dependencies herunterladen
+- `make run` von source starten
+- `make build exec` programm freezen und dieses ausführen
+- `make clean` build-Dateien löschen
+- `make gen` requirements.txt durch pip freeze überschreiben
+
+### oder manuell
+
+- (optional) venv erstellen & aktivieren
+    - `python3 -m venv ./venv`
+        - bash/zsh: `source ./venv/bin/activate`
+        - batch: `./venv/Scripts/activate.bat`
+        - für andere Shells: [mehr Infos zu venv hier](https://docs.python.org/3/library/venv.html)
+- `pip install -r requirements.txt` dependencies herunterladen
+- `python3 CSViewer.py` source ausführen
+- für builds, siehe den [makefile](makefile#L32)
 
 ## Getting Started
 
@@ -48,14 +66,8 @@ Das Programm ist in 3 Sektionen aufgeteilt.
 ## TODO
 
 - Automatische Zuweisung der Daten auch mit arbiträren Header Namen ("Zeit", "Messung" -&gt; "x", "y")
-- ~~Eigenes Pyqtgraph Objekt~~:
-    - ~~Deaktivieren des Kontextmenüs (manche Optionen können das Programm zum Absturz bringen)~~
-    - ~~Veränderbare rendering Reihenfolge durch Drag-and-drop verschieben von Elementen der File List~~
-    - ~~Visuelles verschieben von Graphen für intuitive Kontrolle über x und y Offset (?)~~ ~~Warscheinlich nicht/schwer möglich.~~
-- Programm Icon
-- ~~Optionen beim speichern (Daten einbetten, Farben speichern, etc.)~~
-- Compiled release (.exe, .dmg, ...?)
+- ~~Programm Icon~~
+- ~~Compiled release (.exe, .dmg, ...?)~~
 - Testen auf Linux (?)
-- Cursor beim Verschieben von Graphen ändern
+- ~~Cursor beim Verschieben von Graphen ändern~~
 - Graph und DataFile Klassen zusammenfassen, villeicht durch SignalProxies
-- ~~parent/handler Referenzen durch Qt Signale ersetzen~~
