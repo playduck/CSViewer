@@ -5,6 +5,7 @@
 
 import sys
 import os.path
+from pathlib import Path
 import json
 import PlotViewer
 import DataFile
@@ -46,8 +47,8 @@ class DeselectableListWidget(QtWidgets.QListWidget):
         self.clearSelection()
         for df in self.list:
             df.highlight = False
-        self.sigUpdated.emit()
         QtWidgets.QListWidget.mousePressEvent(self, event)
+        self.sigUpdated.emit()
 
 
 class CSViewerWindow(QtWidgets.QWidget):
@@ -72,12 +73,12 @@ class CSViewerWindow(QtWidgets.QWidget):
         # Toolbar related Buttons
         self.toolbar = QtWidgets.QToolBar()
 
-        self.addNew = QtWidgets.QPushButton(QtGui.QIcon("./assets/add_new.png"), "Hinzufügen")
+        self.addNew = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/add_new.png")), "Hinzufügen")
         self.addNew.clicked.connect(self.openFileNameDialog)
         self.addNew.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.addNew)
 
-        self.removeSelectedBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/delete_select.png"), "Löschen")
+        self.removeSelectedBtn = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/delete_select.png")), "Löschen")
         self.removeSelectedBtn.clicked.connect(self.deleteSelected)
         self.removeSelectedBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
@@ -85,12 +86,12 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         self.toolbar.addSeparator()
 
-        self.saveBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/save.png"), "Speichern")
+        self.saveBtn = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/save.png")), "Speichern")
         self.saveBtn.clicked.connect(self.saveOptions)
         self.saveBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.saveBtn)
 
-        self.loadBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/load.png"), "Laden")
+        self.loadBtn = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/load.png")), "Laden")
         self.loadBtn.clicked.connect(self.load)
         self.loadBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.loadBtn)
@@ -109,7 +110,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         self.toolbar.addWidget(self.spacer)
         self.toolbar.addSeparator()
 
-        self.infoButton = QtWidgets.QPushButton(QtGui.QIcon("./assets/help.png"), "Info")
+        self.infoButton = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/help.png")), "Info")
         self.infoButton.clicked.connect(self.showInfo)
         self.infoButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.infoButton)
@@ -176,13 +177,16 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         if disabled:    # only disable on no files, removing only works when any item is selected
             self.removeSelectedBtn.setDisabled(True)
+            self.plot.win.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
 
     def highlightDeSelect(self):
         self.removeSelectedBtn.setDisabled(True)
+        self.plot.win.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.updatePlot()
 
     def highlightSelected(self, listItem):
         self.removeSelectedBtn.setDisabled(False)
+        self.plot.win.setCursor(QtGui.QCursor(QtCore.Qt.SizeAllCursor))
 
         for df in self.globalFileList:
             df.highlight = (listItem == df.item)
@@ -191,6 +195,7 @@ class CSViewerWindow(QtWidgets.QWidget):
 
     def highlightClicked(self, plotItem):
         self.removeSelectedBtn.setDisabled(False)
+        self.plot.win.setCursor(QtGui.QCursor(QtCore.Qt.SizeAllCursor))
 
         for df in self.globalFileList:
             df.highlight = plotItem == df.plot
@@ -374,8 +379,15 @@ class CSViewerWindow(QtWidgets.QWidget):
     # shows info box
     def showInfo(self):
         msgBox = QtWidgets.QMessageBox()
+
+        with open(style, "r") as fh:
+            msgBox.setStyleSheet(fh.read())
         # msgBox.setIcon(QtWidgets.QMessageBox.Information)
-        msgBox.setIconPixmap(QtGui.QPixmap("./assets/logo.png"))
+        msgBox.setIconPixmap(splashImg.scaledToWidth(
+                app.primaryScreen().size().width() / 3,
+                QtCore.Qt.SmoothTransformation
+            )
+        )
         msgBox.setWindowTitle("Info")
         msgBox.setText("CSViewer")
         msgBox.setInformativeText("""
@@ -391,8 +403,20 @@ class CSViewerWindow(QtWidgets.QWidget):
         msgBox.exec_()
 
 
+
+
 # main entry point
 if __name__ == "__main__":
+
+    # set paths for frozen mode
+    root = Path()
+    style = "./style.qss"
+    if getattr(sys, 'frozen', False):
+        root = Path(sys._MEIPASS) # sys has attribute if it's frozen
+        qtmodern.styles._STYLESHEET = root / 'qtmodern/style.qss'
+        qtmodern.windows._FL_STYLESHEET = root / 'qtmodern/frameless.qss'
+        style = root / "user/style.qss"
+
     # setup High DPI Support
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
@@ -400,9 +424,22 @@ if __name__ == "__main__":
     # Create main App
     app = QtWidgets.QApplication(sys.argv)
 
+    app.setApplicationName("CSViewer")
+    app.setWindowIcon(QtGui.QIcon(str(root / "assets/icon-512.png")))
+
     # show splash screen
-    splashImg = QtGui.QPixmap("./assets/logo.png")
-    splash = QtGui.QSplashScreen(splashImg, QtCore.Qt.WindowStaysOnTopHint)
+    splashImg = QtGui.QPixmap(str(root / "assets/banner.png"))
+    splashImg = splashImg.scaledToWidth(
+        app.primaryScreen().size().width() / 2,
+        QtCore.Qt.SmoothTransformation
+    )
+    splash = QtGui.QSplashScreen(
+        splashImg.scaledToWidth(
+            app.primaryScreen().size().width() / 2,
+            QtCore.Qt.SmoothTransformation
+        ),
+        QtCore.Qt.WindowStaysOnTopHint
+    )
     splash.show()
 
     # set style (order is important)
@@ -422,7 +459,7 @@ if __name__ == "__main__":
     gui.window = mw
 
     # load custom styles
-    with open("./style.qss", "r") as fh:
+    with open(style, "r") as fh:
         mw.setStyleSheet(fh.read())
 
     mw.show()

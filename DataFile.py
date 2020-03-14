@@ -4,6 +4,8 @@
 #
 
 import os
+import sys
+from pathlib import Path
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 import pandas as pd
@@ -12,6 +14,11 @@ from scipy import integrate
 from scipy.interpolate import make_interp_spline
 from scipy.ndimage.filters import gaussian_filter1d
 
+root = Path()
+style = "./style.qss"
+if getattr(sys, 'frozen', False):
+    root = Path(sys._MEIPASS)
+    style = root / "user/style.qss"
 
 # modified class from user Spencer at
 # https://stackoverflow.com/questions/20922836/increases-decreases-qspinbox-value-when-click-drag-mouse-python-pyside
@@ -52,6 +59,8 @@ class DataFile(QtWidgets.QWidget):
         self.frame.setCursor(QtGui.QCursor(QtCore.Qt.SizeVerCursor))
         self.item = QtWidgets.QListWidgetItem()
         self.settings = QtWidgets.QDialog()
+        with open(style, "r") as fh:
+            self.settings.setStyleSheet(fh.read())
         self.plot = None
         self.zIndex = 0
         self.cursor = None
@@ -156,7 +165,7 @@ class DataFile(QtWidgets.QWidget):
         self.layout.addWidget(self.x_offset_inline_label)
         self.layout.addWidget(self.x_offset_inline)
 
-        self.settingsBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/settings.png"), "")
+        self.settingsBtn = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/settings.png")), "")
         self.settingsBtn.clicked.connect(self.showSettings)
         self.settingsBtn.setFlat(True)
         self.settingsBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))

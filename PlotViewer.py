@@ -3,12 +3,18 @@
 # 11.2.2020
 #
 
+import sys
+from pathlib import Path
+
 import numpy as np
 from PyQt5 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 
-Z_IDX_TOP = 201
+root = Path()
+if getattr(sys, 'frozen', False):
+    root = Path(sys._MEIPASS)
 
+Z_IDX_TOP = 201
 
 class Graph(pg.PlotDataItem):
     sigUpdated = QtCore.pyqtSignal()
@@ -78,7 +84,7 @@ class PlotViewer:
         self.proxy = pg.SignalProxy(self.plt.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
 
         # Custom Toolbar Buttons
-        self.resetBtn = QtWidgets.QPushButton(QtGui.QIcon("./assets/fit_screen.png"), "Anpassen")
+        self.resetBtn = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/fit_screen.png")), "Anpassen")
         self.resetBtn.clicked.connect(lambda x, who="autoscale": self.toolbarHandler(x, who))
         self.resetBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
