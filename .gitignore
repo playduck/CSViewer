@@ -3,7 +3,17 @@ __pycache__/*
 .idea/*
 .vscode/*
 /venv/*
+/source/*
 /External Libraries/*
+
+# Build
+/bin
+/build
+/dist
 
 # MacOS
 .DS_Store
+
+# Design
+*.psd
+*.ai
