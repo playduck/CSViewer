@@ -17,7 +17,11 @@ class Graph(pg.PlotDataItem):
         self.dataFile = dataFile
 
         pg.PlotDataItem.__init__(self, **kwds)
-        pg.PlotDataItem.setData(self, *args)
+        self.setData(*args)
+
+        self.curve.setClickable(True)
+        self.curve.mouseDragEvent = self.mouseDragEvent
+        self.scatter.mouseDragEvent = self.mouseDragEvent
 
     def mouseDragEvent(self, ev):
 
