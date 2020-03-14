@@ -18,7 +18,7 @@ QPushButton {
 QPushButton:hover {
     color: palette(HighlightedText);
     background-color: palette(Dark);
-    border: 1px solid palette(Highlight);
+    border: 1px solid rgb(0, 190, 100);
 }
 QPushButton:pressed {
     background-color: palette(Dark);
@@ -29,12 +29,24 @@ QPushButton:flat {
     width: 10%;
 }
 QPushButton:flat:hover {
-    border: 1px solid palette(Highlight);
+    border: 1px solid rgb(0, 190, 100);
 }
 QPushButton:disabled,
 QPushButton:disabled:hover {
     /* color: rgb(100, 100, 100); */
     background-color: palette(Base);
+}
+
+QDialog {
+    border-radius: 20px;
+}
+QMessageBox QPushButton,
+QDialog QPushButton {
+    background-color: palette(Dark);
+}
+QMessageBox QPushButton:hover,
+QDialog QPushButton:hover {
+    background-color: palette(Midlight);
 }
 
 QListView {
@@ -43,7 +55,7 @@ QListView {
     border-radius: 5px;
 }
 QListView::item:selected {
-    border: 1px solid palette(Highlight);
+    border: 1px solid rgb(0, 190, 100);
     background-color: palette(Midlight);
 }
 QListView::item:selected:active {
