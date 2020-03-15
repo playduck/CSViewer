@@ -73,6 +73,9 @@ class PlotViewer:
         self.plt.showGrid(True, True, 0.6)
         self.plt.hideButtons()
         self.plt.autoRange(padding=0.2)
+        self.plt.showAxis("top")
+        self.plt.showAxis("right")
+        self.plt.vb.setLimits(minXRange=0.001, minYRange=0.001)
 
         # vLine for vertical x-Axis cursor
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
@@ -124,7 +127,7 @@ class PlotViewer:
 
         # plot = self.plt.plot(x, y, pen=pen, symbolPen=None, symbolBrush=None, symbol='o', symbolSize=5)
 
-        plot = Graph(dataFile, np.array(x), np.array(y), pen=pen, symbolPen=None, symbolBrush=None, symbol='o', symbolSize=5)
+        plot = Graph(dataFile, np.array(x), np.array(y), name=dataFile.filename, pen=pen, symbolPen=None, symbolBrush=None, symbol='o', symbolSize=5)
         plot.sigClicked.connect(self.parent.highlightClicked)
         plot.sigUpdated.connect(self.parent.updatePlot)
 

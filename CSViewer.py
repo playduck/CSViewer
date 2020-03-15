@@ -35,7 +35,6 @@ def getColor(i):
 
 
 # Custom List to Deselect Items when whitespace is clicked on
-
 class DeselectableListWidget(QtWidgets.QListWidget):
     sigUpdated = QtCore.pyqtSignal()
 
@@ -262,6 +261,10 @@ class CSViewerWindow(QtWidgets.QWidget):
         saveDialogBox.setWindowFlags(
             QtCore.Qt.WindowStaysOnTopHint
         )
+        saveDialogBox.setWindowTitle("Speichern")
+        with open(style, "r") as fh:
+            saveDialogBox.setStyleSheet(fh.read())
+
         layout = QtWidgets.QGridLayout()
 
         embed = QtWidgets.QCheckBox()
@@ -271,6 +274,10 @@ class CSViewerWindow(QtWidgets.QWidget):
         color = QtWidgets.QCheckBox()
         colorLabel = QtWidgets.QLabel("Farbe speichern: ")
         colorLabel.setBuddy(color)
+
+        rule = QtWidgets.QFrame()
+        rule.setFrameShape(QtWidgets.QFrame.HLine)
+        rule.setFrameShadow(QtWidgets.QFrame.Sunken)
 
         OKButton = QtWidgets.QPushButton("Ok")
         OKButton.clicked.connect(saveDialogBox.accept)
@@ -282,9 +289,9 @@ class CSViewerWindow(QtWidgets.QWidget):
         layout.addWidget(embed,         0,1)
         layout.addWidget(colorLabel,    1,0)
         layout.addWidget(color,         1,1)
-
-        layout.addWidget(OKButton,      2,0)
-        layout.addWidget(CancelButton,  2,1)
+        layout.addWidget(rule,          2,0,1,0)
+        layout.addWidget(OKButton,      3,0,1,0)
+        layout.addWidget(CancelButton,  4,0,1,0)
 
         saveDialogBox.setLayout(layout)
         saveDialogBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
@@ -443,7 +450,7 @@ if __name__ == "__main__":
     splash.show()
 
     # set style (order is important)
-    qtmodern.styles.light(app)
+    qtmodern.styles.dark(app)
     # initialize program
     gui = CSViewerWindow()
 
