@@ -1,0 +1,157 @@
+
+/* ------------------------------- DockWidget ------------------------------- */
+
+QDockWidget::title {
+    background-color: palette(Dark);
+    margin: 8px;
+    margin-bottom: -5px;
+    padding: 0px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* --------------------------------- toolbar -------------------------------- */
+
+QToolBar {
+    padding: 5px;
+    background-color: palette(Dark);
+    /* border-radius: 5px; */
+}
+QToolBar::separator {
+    margin: 5px;
+}
+
+/* --------------------------------- buttons -------------------------------- */
+
+QPushButton {
+    border-radius: 2px;
+    icon-size: 20px;
+    padding: 6px;
+    margin: 2px;
+    color: palette(ButtonText);
+    background-color: palette(Button);
+}
+QPushButton:hover {
+    color: palette(HighlightedText);
+    background-color: palette(Dark);
+    border: 1px solid palette(Highlight);
+}
+QPushButton:pressed {
+    background-color: palette(Dark);
+}
+QPushButton:checked {
+    background-color: palette(Dark);
+    border: 2px solid palette(HighlightedText);
+}
+QPushButton:flat {
+    border: none;
+    background-color: transparent;
+    width: 10%;
+}
+QPushButton:flat:hover {
+    border: 1px solid palette(Highlight);
+}
+QPushButton:flat:focus {
+    outline: 0;
+}
+
+QPushButton:disabled,
+QPushButton:disabled:hover {
+    /* color: rgb(255, 0, 100); */
+    background-color: palette(Base);
+}
+
+/* --------------------------------- dialogs -------------------------------- */
+
+QDialog {
+    border-radius: 20px;
+}
+QMessageBox QPushButton,
+QDialog QPushButton {
+    background-color: palette(Dark);
+}
+QMessageBox QPushButton:hover,
+QDialog QPushButton:hover {
+    background-color: palette(Midlight);
+}
+
+/* ---------------------------------- lists --------------------------------- */
+
+QListView#fileList ,
+QListView#process-list {
+    /* border: none; */
+    background-color: palette(Dark);
+    border-radius: 5px;
+    padding: 2.5px 5px;
+    margin: 8px;
+    /* margin-top: 0; */
+    outline: 0;
+}
+
+QListView#process-list {
+    padding: 4px 5px;
+}
+
+QListView::item #process-list {
+    background-color: palette(Dark);
+    border-radius: 5px;
+    border: 2px solid palette(Base);
+    margin: 1px;
+}
+QScrollBar {
+    background-color: transparent;
+    margin: 0;
+}
+QListView::item {
+    background-color: palette(Base);
+    border-radius: 5px;
+    margin: 2.5px 0;
+    /* margin-bottom: 2.5px; */
+}
+QListView::item:focus {
+    background-color: palette(Base);
+}
+QListView::item:selected,
+QListView::item:selected:active {
+    border: 1px solid palette(Highlight);
+}
+
+/* -------------------------------- combo box ------------------------------- */
+
+QComboBox {
+    outline: 0;
+    /* border: none; */
+    padding: 2px;
+    background-color: palette(Base);
+    selection-background-color: palette(Highlight);
+    selection-color: palette(Base);
+}
+
+/* --------------------------------- windows -------------------------------- */
+
+#plotWindow {
+    background-color: palette(Dark);
+    padding: 2px;
+    border-radius: 5px;
+}
+
+QLabel#infoWindow {
+    background-color: palette(Dark);
+    padding: 8px;
+    border-radius: 5px;
+}
+
+QFrame#settings QWidget {
+    padding: 1px 1px;
+}
+QFrame#settings QWidget:active:focus  {
+    border: 1px solid palette(Highlight);
+    border-radius: 1px;
+}
+
+QMainWindow,
+#windowFrame {
+    /* border-radius: 0; */
+    background-color: palette(Window);
+    padding: 5px;
+}
