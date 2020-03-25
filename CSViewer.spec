@@ -12,12 +12,6 @@ for package, files in package_imports:
     proot = Path(importlib.import_module(package).__file__).parent
     added_file.extend((proot / f, package) for f in files)
 
-# add custom qss
-added_file.extend([(
-    Path(os.path.abspath("./style.qss")),
-    "user"
-)])
-
 # add icons
 assets = "assets"
 icon_files = [f for f in os.listdir(assets) if os.path.isfile(os.path.join(assets, f))]
