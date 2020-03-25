@@ -5,60 +5,42 @@
 
 import sys
 import os.path
+import copy
 from pathlib import Path
 import json
+
+import Config
+import ListWidget
 import PlotViewer
 import DataFile
+import Process
+
+import pyqtgraph as pg
 import pandas as pd
 from PyQt5 import QtGui, QtCore, QtWidgets
 import qtmodern.styles
 import qtmodern.windows
 
-# Colors in HSV for Graphs
-COLORS = [
-    [47, 81, 100],
-    [197, 88, 100],
-    [116, 73, 96],
-    [273, 86, 100],
-    [10, 88, 96]
-]
-
-
 # function tries to generate unique Colors for graphs
 def getColor(i):
-    if i < len(COLORS):
-        return COLORS[i].copy()
+    if i < len(Config.COLORS):
+        return Config.COLORS[i].copy()
     else:
-        color = COLORS[i % len(COLORS)].copy()
-        color[0] = (color[0] + 20 * i) % 360
+        color = Config.COLORS[i % len(Config.COLORS)].copy()
+        color[0] = (color[0] + 10 + 10 * i) % 360
         return color
 
 
-# Custom List to Deselect Items when whitespace is clicked on
-class DeselectableListWidget(QtWidgets.QListWidget):
-    sigUpdated = QtCore.pyqtSignal()
-
-    def __init__(self, fileList, parent=None):
-        super().__init__(parent=None)
-        self.list = fileList
-
-    def mousePressEvent(self, event):
-        self.clearSelection()
-        for df in self.list:
-            df.highlight = False
-        QtWidgets.QListWidget.mousePressEvent(self, event)
-        self.sigUpdated.emit()
-
-
-class CSViewerWindow(QtWidgets.QWidget):
+class CSViewerWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(CSViewerWindow, self).__init__()
 
-        self.globalFileList = []
-        self.window = None
+        self.sourceList = None
+        self.destList = None
 
         self.setWindowTitle("CSViewer")
-        self.setGeometry(50, 50, 1000, 500)
+        self.setGeometry(50, 50, 1000, 600)
+
         # Set Window to screen center
         geometry = self.frameGeometry()
         screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
@@ -66,179 +48,268 @@ class CSViewerWindow(QtWidgets.QWidget):
         geometry.moveCenter(center)
         self.move(geometry.topLeft())
 
-        self.mainLayout = QtWidgets.QVBoxLayout()
-        self.subLayout = QtWidgets.QHBoxLayout()
+        # self.mainLayout = QtWidgets.QVBoxLayout()
+        # self.subLayout = QtWidgets.QHBoxLayout()
+
+        # Viewer handles the plotting section
+        viewer = QtWidgets.QVBoxLayout()
+        self.plot = PlotViewer.PlotViewer(self)
+        self.plotProxy = pg.SignalProxy(self.plot.plt.scene().sigMouseMoved,
+             rateLimit=60, slot=self.cursorUpdate)
+        viewer.addLayout(self.plot.layout)
+        self.plotView = QtWidgets.QWidget(self)
+        self.plotView.setLayout(viewer)
+        self.plotView.setMinimumSize(300, 300)
+
+        # File list keeping track of all loaded files
+        self.fileList = ListWidget.DeselectableListWidget()
+        self.fileList.setMinimumWidth(300)
+        self.fileList.setObjectName("fileList")
+        self.__connectProcess(self)
+
+        # self.fileList.sigSource.connect(self.beginDrag)
+        # self.fileList.sigDest.connect(self.endDrag)
+        # self.fileList.sigTrigger.connect(self.doDrag)
+        # self.fileList.sigDeselect.connect(self.deselectAll)
+
+        self.fileListDock = QtWidgets.QDockWidget("Dateien")
+        self.fileListDock.setTitleBarWidget(QtWidgets.QWidget())
+        self.fileListDock.setFeatures(
+            QtWidgets.QDockWidget.DockWidgetMovable |
+            QtWidgets.QDockWidget.DockWidgetFloatable
+        )
+        self.fileListDock.setWidget(self.fileList)
 
         # Toolbar related Buttons
+        # FIXME toolbar cannot produce extension popup on samall screen width when it's not a child of QMainWindow
         self.toolbar = QtWidgets.QToolBar()
 
-        self.addNew = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/add_new.png")), "Hinzufügen")
-        self.addNew.clicked.connect(self.openFileNameDialog)
+        self.addNew = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_new.png")), "Hinzufügen")
+        self.addNew.clicked.connect(self.addFile)
         self.addNew.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.addNew)
 
-        self.removeSelectedBtn = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/delete_select.png")), "Löschen")
+        self.addProcessBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_process.png")), "Prozess")
+        self.addProcessBtn.clicked.connect(self.addProcess)
+        self.addProcessBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.toolbar.addWidget(self.addProcessBtn)
+
+        self.setMaxBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/set_max.png")), "Maximum")
+        # self.setMaxBtn.clicked.connect()
+        self.setMaxBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.setMaxBtn.setDisabled(True) # TODO
+        self.toolbar.addWidget(self.setMaxBtn)
+
+        self.removeSelectedBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/delete_select.png")), "Löschen")
         self.removeSelectedBtn.clicked.connect(self.deleteSelected)
         self.removeSelectedBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-
         self.toolbar.addWidget(self.removeSelectedBtn)
 
         self.toolbar.addSeparator()
 
-        self.saveBtn = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/save.png")), "Speichern")
+        self.saveBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/save.png")), "Speichern")
         self.saveBtn.clicked.connect(self.saveOptions)
         self.saveBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.saveBtn.setDisabled(True) # FIXME
         self.toolbar.addWidget(self.saveBtn)
-
-        self.loadBtn = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/load.png")), "Laden")
-        self.loadBtn.clicked.connect(self.load)
-        self.loadBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.toolbar.addWidget(self.loadBtn)
 
         self.toolbar.addSeparator()
 
-        # Viewer handles the plotting section
-        self.viewer = QtWidgets.QVBoxLayout()
-        self.plot = PlotViewer.PlotViewer(self.toolbar, self)
-        self.viewer.addLayout(self.plot.layout)
+        self.resetBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/fit_screen.png")), "Anpassen")
+        self.resetBtn.clicked.connect(self.autoscale)
+        self.resetBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.toolbar.addWidget(self.resetBtn)
+
+        self.aspectBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/ratio.png")), "Verhältniss")
+        self.aspectBtn.clicked.connect(lambda isLocked: self.plot.plt.vb.setAspectLocked(lock=isLocked, ratio=1))
+        self.aspectBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.aspectBtn.setCheckable(True)
+        self.toolbar.addWidget(self.aspectBtn)
 
         # Spacer to push info button to the right
         self.toolbar.addSeparator()
+
+        self.claculateBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/magic.png")), "Berechnen")
+        # self.claculateBtn.clicked.connect()
+        self.claculateBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.claculateBtn.setDisabled(True) # TODO
+        self.toolbar.addWidget(self.claculateBtn)
+
         self.spacer = QtWidgets.QWidget()
         self.spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.toolbar.addWidget(self.spacer)
         self.toolbar.addSeparator()
 
-        self.infoButton = QtWidgets.QPushButton(QtGui.QIcon(str(root / "assets/help.png")), "Info")
+        self.infoButton = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/help.png")), "Info")
         self.infoButton.clicked.connect(self.showInfo)
         self.infoButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.infoButton)
 
-        # File list keeping track of all loaded files
-        self.fileList = DeselectableListWidget(self.globalFileList)
-        self.fileList.setMinimumWidth(330)
-        self.fileList.setMaximumWidth(550)
-        self.fileList.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.fileList.setDefaultDropAction(QtCore.Qt.MoveAction)
-        self.fileList.itemClicked.connect(self.highlightSelected)
-        self.fileList.sigUpdated.connect(self.highlightDeSelect)
-        self.fileList.installEventFilter(self)
+        self.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.fileListDock)
+        self.setCentralWidget(self.plotView)
 
-        # adding widgets and layouts
-        self.subLayout.addWidget(self.fileList)
-        self.subLayout.addLayout(self.viewer)
-        self.mainLayout.addWidget(self.toolbar)
-        self.mainLayout.addLayout(self.subLayout)
-
-        self.setLayout(self.mainLayout)
         self.show()
 
-        self.updateDisabledButtons()
-        self.updatePlot()
+    # disable context menu
+    def createPopupMenu(self):
+        pass
 
-    # update drawing and redraw
-    def updatePlot(self):
-        self.plot.update(self.globalFileList)
+    # gets all cursors and sets the info text
+    def cursorUpdate(self, evt):
+        pos = evt[0]  # using signal proxy turns original arguments into a tuple
+        if self.plot.plt.sceneBoundingRect().contains(pos):
+            mousePoint = self.plot.plt.vb.mapSceneToView(pos)
+            self.plot.vLine.setPos(mousePoint.x())
 
-    # Handle fileList Drag and Drop reordering
-    def eventFilter(self, object, event):
-        if object is self.fileList:
-            if event.type() == QtCore.QEvent.ChildAdded:
-                event.accept()
+            info = "<span>x={:05.3f}</span>".format(mousePoint.x())
 
-            if event.type() == QtCore.QEvent.ChildRemoved:
-                event.accept()
-                self.reorder()
-            return False
-        return False
+            for index, item in enumerate(self.fileList.list):
+                info += item.updateCursor(mousePoint)
 
-    def onFileListUpdate(self):
+            self.plot.info.setText(info)
+
+    # scales plot based on all enabled objects
+    def autoscale(self):
+        # disabled graphs and cursors shouldn't influence the view
+        considerations = []
+
+        for item in self.fileList.list:
+            considerations = considerations + item.autoscale()
+
+        print(considerations)
+
+        self.plot.plt.autoRange(padding=0.2, items=considerations)
+
+    def deleteSpecific(self, li):
+        self.fileList.deleteSelected(self.plot, li.item)
         self.reorder()
-        self.updateDisabledButtons()
+
+    def deleteSelected(self):
+        self.fileList.deleteSelected(self.plot)
+        self.reorder()
 
     # sets z-index based on fileList order
     def reorder(self):
-        for df in self.globalFileList:
-            for j in range(0, self.fileList.count()):
-
-                if df.item == self.fileList.item(j):
-                    df.zIndex = (PlotViewer.Z_IDX_TOP - j - 1)
-
-        self.globalFileList.sort(key=lambda df: df.zIndex, reverse=True)
-
-        self.updatePlot()
+        self.fileList.setZIndex(Config.Z_IDX_TOP - 1)
 
     def updateDisabledButtons(self):
-        disabled = not (self.fileList.count() > 0)
+        self.removeSelectedBtn.setDisabled(not (self.fileList.getSelected()))
 
-        self.saveBtn.setDisabled(disabled)
-        self.plot.resetBtn.setDisabled(disabled)
+    def deselectAll(self):
+        self.fileList.deselectAll()
 
-        if disabled:    # only disable on no files, removing only works when any item is selected
-            self.removeSelectedBtn.setDisabled(True)
-            self.plot.win.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+# ---------------------------------- Adding ---------------------------------- #
 
-    def highlightDeSelect(self):
-        self.removeSelectedBtn.setDisabled(True)
-        self.plot.win.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
-        self.updatePlot()
+    def beginDrag(self, list):
+        if self.sourceList == None and self.destList == None:
+            self.sourceList = list
 
-    def highlightSelected(self, listItem):
-        self.removeSelectedBtn.setDisabled(False)
-        self.plot.win.setCursor(QtGui.QCursor(QtCore.Qt.SizeAllCursor))
+    def endDrag(self, list):
+        self.destList = list
 
-        for df in self.globalFileList:
-            df.highlight = (listItem == df.item)
+    def doDrag(self):
 
-        self.updatePlot()
+        if self.sourceList == None or self.destList == None:
+            return
 
-    def highlightClicked(self, plotItem):
-        self.removeSelectedBtn.setDisabled(False)
-        self.plot.win.setCursor(QtGui.QCursor(QtCore.Qt.SizeAllCursor))
+        if self.sourceList != self.destList:
 
-        for df in self.globalFileList:
-            df.highlight = plotItem == df.plot
+            item = None
+            widget = None
 
-            if plotItem == df.plot:
-                for j in range(0, self.fileList.count()):
-                    if df.item == self.fileList.item(j):
-                        self.fileList.setCurrentItem(df.item)
+            # get item
+            for i in range(0, self.destList.count()):
+                match = False
+                for j in range(0, len(self.destList.list)):
+                    if self.destList.item(i) == self.destList.list[j].item:
+                        match = True
+                        break
+                if not match:
+                    item = QtWidgets.QListWidgetItem(self.destList.item(i))
+                    self.destList.takeItem(i)
+                    break
 
-        self.updatePlot()
+            # get widget
+            for i in range(0, len(self.sourceList.list)):
+                match = False
+                for j in range(0, self.sourceList.count()):
+                    if self.sourceList.list[i].item == self.sourceList.item(j):
+                        match = True
+                        break
+                if not match:
+                    widget = self.sourceList.list.pop(i)
+                    break
 
-    # gets selected datafile
-    def deleteSelected(self):
-        selected = self.fileList.currentItem()
-        for i in range(0, len(self.fileList)):
-            if self.fileList.item(i) == selected:
-                self.deleteFileList(self.globalFileList[i])
+            # clone
+            newWidget = copy.copy(widget)
 
-    # deletes given datafile from self and the list
-    def deleteFileList(self, df):
-        self.plot.plt.removeItem(df.plot)
-        self.plot.plt.removeItem(df.cursor)
-        for i in range(0, len(self.globalFileList)):
-            if self.globalFileList[i] == df:
-                self.globalFileList.pop(i)
-                break
-        for i in range(0, len(self.fileList)):
-            if self.fileList.item(i) == df.item:
-                self.fileList.takeItem(i)
-                break
-        del df
-        self.plot.update(self.globalFileList)
+            self.plot.plt.removeItem(widget.plot)
+            self.plot.plt.removeItem(widget.cursor)
+            # del widget
 
-        self.onFileListUpdate()
+            self.destList.addItem(newWidget)
+            self.plot.addPlot(newWidget)
 
-    # adds a datafile from a file
-    def addFileList(self, df):
-        temp = df.showListItem()
-        self.fileList.addItem(temp[0])
-        self.fileList.setItemWidget(temp[0], temp[1])
+            if isinstance(newWidget, Process.Process):
+                self.__connectProcess(newWidget)
 
-        self.onFileListUpdate()
+            self.__connectListItem(newWidget)
 
-        return df
+            self.sourceList.sigCalc.emit()
+            self.sourceList.sigUpdateUI.emit()
+
+        self.sourceList = None
+        self.destList = None
+        self.deselectAll()
+        self.reorder()
+
+    def addProcess(self):
+        pc = Process.Process(getColor(self.fileList.getCount()))
+        self.__connectProcess(pc)
+        self.__connectListItem(pc)
+
+        self.fileList.addItem(pc)
+        self.plot.addPlot(pc)
+        self.reorder()
+
+    def addFile(self, df=None, list=None):
+        if not list:
+            list = self.fileList
+
+        if not df:
+            df = self.openFileNameDialog()
+
+        if df:
+            self.__connectListItem(df)
+            list.addItem(df)
+            self.plot.addPlot(df)
+            self.reorder()
+
+    def __createFile(self, name):
+        return DataFile.DataFile(
+            name,
+            getColor(self.fileList.getCount())
+        )
+
+    def __addFileFromName(self, name, list):
+        self.addFile(
+            self.__createFile(name),
+            list
+        )
+
+    def __connectListItem(self, li):
+        li.sigDeleteMe.connect(self.deleteSpecific)
+
+    def __connectProcess(self, pc):
+        pc.fileList.sigSource.connect(self.beginDrag)
+        pc.fileList.sigDest.connect(self.endDrag)
+        pc.fileList.sigTrigger.connect(self.doDrag)
+        pc.fileList.sigDeselect.connect(self.deselectAll)
+
+        pc.fileList.sigAddFile.connect(self.__addFileFromName)
+
+# -------------------------------- Save / Load ------------------------------- #
 
     # prompts user for input file
     def openFileNameDialog(self):
@@ -246,14 +317,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                             "CSV Dateien (*.csv);;Alle Dateinen (*)", options=options)
         if filename:
-            df = DataFile.DataFile(filename, getColor(len(self.globalFileList)), self)
-            df.sigPlotUpdate.connect(self.updatePlot)
-            df.initSettings()
-            df.calculateData()
-            df.plot, df.cursor = self.plot.initPlot(df)
-
-            self.globalFileList.append(df)
-            self.addFileList(df)
+            return self.__createFile(filename)
 
     # show Option Dialog for saving
     def saveOptions(self):
@@ -262,7 +326,7 @@ class CSViewerWindow(QtWidgets.QWidget):
             QtCore.Qt.WindowStaysOnTopHint
         )
         saveDialogBox.setWindowTitle("Speichern")
-        with open(style, "r") as fh:
+        with open(Config.getResource("assets/style.qss"), "r") as fh:
             saveDialogBox.setStyleSheet(fh.read())
 
         layout = QtWidgets.QGridLayout()
@@ -302,6 +366,7 @@ class CSViewerWindow(QtWidgets.QWidget):
             self.save(embed.isChecked(), color.isChecked())
 
     # prompts user for save-file location and saves data
+    # TODO
     def save(self, embed, color):
         options = QtWidgets.QFileDialog.Options()
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "",
@@ -310,21 +375,9 @@ class CSViewerWindow(QtWidgets.QWidget):
             file = open(filename, "w")
 
             dataMainArray = []
-            for df in self.globalFileList:
-                data = {
-                    "filename": df.filename,
-                    "enabled": df.enabled,
-                    "color": df.color if color else None,
-                    "width": df.width,
-                    "xOffset": df.xOffset,
-                    "yOffset": df.yOffset,
-                    "interpolation": df.interpolation,
-                    "interpolationAmount": df.interpolationAmount,
-                    "integrate": df.integrate,
-                    "filter": df.filter,
-                    "dataEmbed": df.data.to_json() if embed else None
-                }
-                dataMainArray.append(data)
+            for item in self.fileList.list:
+                # dataMainArray.append(data)
+                pass
 
             dataMainDict = {
                 "data": dataMainArray
@@ -361,11 +414,10 @@ class CSViewerWindow(QtWidgets.QWidget):
                     if data["dataEmbed"]:
                         df.data = pd.read_json(data["dataEmbed"])
 
-                    df.sigPlotUpdate.connect(self.updatePlot)
                     df.initSettings()
                     df.calculateData()
 
-                    df.plot, df.cursor = self.plot.initPlot(df)
+                    # df.plot, df.cursor = self.plot.initPlot(df)
                     self.globalFileList.append(df)
                     self.addFileList(df)
                 else:
@@ -381,13 +433,13 @@ class CSViewerWindow(QtWidgets.QWidget):
                         break
 
             file.close()
-            self.updatePlot()
+            df.updatePlot()
 
     # shows info box
     def showInfo(self):
         msgBox = QtWidgets.QMessageBox()
 
-        with open(style, "r") as fh:
+        with open(Config.getResource("assets/style.qss"), "r") as fh:
             msgBox.setStyleSheet(fh.read())
         # msgBox.setIcon(QtWidgets.QMessageBox.Information)
         msgBox.setIconPixmap(splashImg.scaledToWidth(
@@ -399,7 +451,7 @@ class CSViewerWindow(QtWidgets.QWidget):
         msgBox.setText("CSViewer")
         msgBox.setInformativeText("""
             <p>von Robin Prillwitz 2020</p>
-            <p>Icons von icons8.com in Style Office.</p>
+            <p>Icons von icons8.com in Style iOS Filled.</p>
             In python 3.7 mit pyqt, qtmodern, pyqtgraph, numpy, pandas und scipy, sowie mit Hilfe von Stackoverflow :).</p>
         """)
         msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -409,20 +461,16 @@ class CSViewerWindow(QtWidgets.QWidget):
 
         msgBox.exec_()
 
+# ----------------------------------- main ----------------------------------- #
 
-
-
-# main entry point
 if __name__ == "__main__":
 
     # set paths for frozen mode
     root = Path()
-    style = "./style.qss"
     if getattr(sys, 'frozen', False):
         root = Path(sys._MEIPASS) # sys has attribute if it's frozen
         qtmodern.styles._STYLESHEET = root / 'qtmodern/style.qss'
         qtmodern.windows._FL_STYLESHEET = root / 'qtmodern/frameless.qss'
-        style = root / "user/style.qss"
 
     # setup High DPI Support
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
@@ -432,14 +480,10 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
     app.setApplicationName("CSViewer")
-    app.setWindowIcon(QtGui.QIcon(str(root / "assets/icon-512.png")))
+    app.setWindowIcon(QtGui.QIcon(Config.getResource("assets/icon-512.png")))
 
     # show splash screen
-    splashImg = QtGui.QPixmap(str(root / "assets/banner.png"))
-    splashImg = splashImg.scaledToWidth(
-        app.primaryScreen().size().width() / 2,
-        QtCore.Qt.SmoothTransformation
-    )
+    splashImg = QtGui.QPixmap(Config.getResource("assets/banner.png"))
     splash = QtGui.QSplashScreen(
         splashImg.scaledToWidth(
             app.primaryScreen().size().width() / 2,
@@ -466,9 +510,19 @@ if __name__ == "__main__":
     gui.window = mw
 
     # load custom styles
-    with open(style, "r") as fh:
-        mw.setStyleSheet(fh.read())
+    with open(Config.getResource("assets/style.qss"), "r") as fh:
+        gui.setStyleSheet(fh.read())
+
+    highlights = QtGui.QPalette()
+    highlights.setColor(QtGui.QPalette.Highlight, QtGui.QColor(0, 230, 118))
+    highlights.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(0, 200, 83))
+    app.setPalette(highlights)
 
     mw.show()
+
+    # trigger event loop all 100ms
+    timer = QtCore.QTimer()
+    timer.timeout.connect(lambda: None)
+    timer.start(100)
 
     sys.exit(app.exec_())
