@@ -117,8 +117,8 @@ class ListItem(QtCore.QObject):
         error_dialog.exec_()
 
     def calculateCommon(self):
-        x = self.data[self.config["xColumn"]]
-        y = self.data[self.config["yColumn"]]
+        x = self.data[self.config["xColumn"]].copy()
+        y = self.data[self.config["yColumn"]].copy()
 
         # apply gaussian filter
         if self.config["filter"] > 0:
