@@ -292,11 +292,11 @@ class DataFile(ListItem.ListItem):
 
         self.calculateCommon()
 
+        x = self.modData["x"]
+        y = self.modData["y"]
+
         # interpolate data
         if self.config["interpolation"] != "Keine":
-
-            x = self.modData["x"]
-            y = self.modData["y"]
 
             # generate common x samples
             xnew = np.linspace(
@@ -314,9 +314,10 @@ class DataFile(ListItem.ListItem):
             spl = interp1d(x, y, kind=k, copy=False,
                     assume_sorted=True, bounds_error=False, fill_value=0)
             y = spl(xnew)
+            x = xnew
 
         # save data
-        self.interpData = pd.DataFrame({'x': xnew, 'y': y})
+        self.interpData = pd.DataFrame({'x': x, 'y': y})
 
         if self.sigCalc:
             self.sigCalc.emit()

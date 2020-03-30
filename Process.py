@@ -152,6 +152,9 @@ class Process(ListItem.ListItem):
             if item.config["interpolation"] == "Bezier":
                 k = 3
             else:
+                # no interpolation is treated as linear
+                # any operations wouldn't work otherwise since matching
+                # sampling rates cannot be guaranteed
                 k = 1
 
             # create spline, ignoreing all out-of-range values
