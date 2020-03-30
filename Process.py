@@ -13,7 +13,7 @@ import pyqtgraph as pg
 import pandas as pd
 import numpy as np
 from scipy import integrate
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter1d
 
 import Config
@@ -113,6 +113,7 @@ class Process(ListItem.ListItem):
         if len(self.fileList.list) == 0:
             self.ignore = True
             self.modData = pd.DataFrame({'x': [0], 'y': [0]})
+            self.interpData = pd.DataFrame({'x': [0], 'y': [0]})
             return
         self.ignore = False
 
@@ -124,8 +125,8 @@ class Process(ListItem.ListItem):
             if item.ignore:
                 break
 
-            imin = item.modData["x"].min()
-            imax = item.modData["x"].max()
+            imin = item.interpData["x"].min()
+            imax = item.interpData["x"].max()
 
             if imin < start:
                 start = imin
@@ -142,30 +143,29 @@ class Process(ListItem.ListItem):
             int(np.ceil(
                 (abs(end - start) / Config.DIVISION) * Config.PPD))
             )
-        x = np.round(x, Config.PRECISION)
         y = np.full(len(x), np.nan)
 
         for item in self.fileList.list:
             if item.ignore:
                 break
 
-            # find this items first x Value
-            xBegin = item.modData["x"].min()
-            # FIXME
-            xOffset = int(round(self.__findValueIndex(x, xBegin)[0], 0))
+            if item.config["interpolation"] == "Bezier":
+                k = 3
+            else:
+                k = 1
 
+            # create spline, ignoreing all out-of-range values
+            spl = interp1d(item.modData["x"], item.modData["y"],
+                    kind=k, copy=False, assume_sorted=True,
+                    bounds_error = False, fill_value=0)
+            values = spl(x)
+
+            # apply Operation otherwise just add
             for i in range(len(x)):
-                if i < len(item.modData["x"]) and (i + xOffset) < len(x):
-                    if np.isnan(y[i + xOffset]):
-                        # if unwritten, overwrite
-                        y[i + xOffset] = item.modData["y"][i]
-                    else:
-                        y[i + xOffset] = round(
-                            self.__doOperation(y[i + xOffset], item.modData["y"][i]),
-                            Config.PRECISION
-                        )
+                if np.isnan(y[i]):
+                    y[i] = values[i]
                 else:
-                    break
+                    y[i] = self.__doOperation(y[i], values[i])
 
         # remove all remaining NANs
         y[np.isnan(y)] = 0
@@ -188,7 +188,7 @@ class Process(ListItem.ListItem):
         y = y + self.config["yOffset"]
 
         # save data
-        self.modData = pd.DataFrame({'x': x, 'y': y})
+        self.interpData = pd.DataFrame({'x': x, 'y': y})
         if self.sigCalc:
             self.sigCalc.emit()
 

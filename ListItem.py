@@ -4,9 +4,12 @@
 #
 
 from PyQt5 import QtGui, QtCore, QtWidgets
+from scipy import integrate
+from scipy.interpolate import make_interp_spline
+from scipy.ndimage.filters import gaussian_filter1d
 import pyqtgraph as pg
 import numpy as np
-import pandas
+import pandas as pd
 import Config
 import Graph
 
@@ -43,6 +46,7 @@ class ListItem(QtCore.QObject):
         self.cursor = None
         self.plot = None
         self.modData = None
+        self.interpData = None
         self.ignore = False
 
         self.plot = Graph.Graph(symbol='o', symbolSize=5)
@@ -91,7 +95,7 @@ class ListItem(QtCore.QObject):
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(None, "Exportieren", "",
                                                   "CSV Datei (*.csv);;Alle Dateinen (*)", options=options)
         if filename:
-            self.modData.to_csv(filename, encoding='utf-8', index=False)
+            self.interpData.to_csv(filename, encoding='utf-8', index=False)
 
 # ----------------------------------- local ---------------------------------- #
 
@@ -111,6 +115,29 @@ class ListItem(QtCore.QObject):
             button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
         error_dialog.exec_()
+
+    def calculateCommon(self):
+        x = self.data[self.config["xColumn"]]
+        y = self.data[self.config["yColumn"]]
+
+        # apply gaussian filter
+        if self.config["filter"] > 0:
+            y = gaussian_filter1d(y, sigma=self.config["filter"])
+
+        # calculate numeric integration / differential
+        if self.config["integrate"] > 0:
+            for i in range(self.config["integrate"]):
+                for j, val in enumerate(x):
+                    y[j] = integrate.quad(lambda _: y[j], 0, val)[0]
+        elif self.config["integrate"] < 0:
+            for i in range(abs(self.config["integrate"])):
+                y = np.gradient(y, x[1] - x[0])
+
+        # Add Offsets
+        x = x + self.config["xOffset"]
+        y = y + self.config["yOffset"]
+
+        self.modData = pd.DataFrame({'x': x, 'y': y})
 
     def recalculate(self):
         raise NotImplementedError
@@ -164,7 +191,7 @@ class ListItem(QtCore.QObject):
                 self.cursor.setZValue(self.config["zIndex"])
                 self.plot.setZValue(self.config["zIndex"])
 
-        self.plot.setData(np.array(self.modData["x"]), np.array(self.modData["y"]))
+        self.plot.setData(np.array(self.interpData["x"]), np.array(self.interpData["y"]))
 
     def update(self):
         self.recalculate()
@@ -218,18 +245,18 @@ class ListItem(QtCore.QObject):
         if self.config.get("enabled"):
             # find nearest x-sample to mouse-x pos
             index = np.clip(
-                np.searchsorted(self.modData["x"],
+                np.searchsorted(self.interpData["x"],
                 [mousePoint.x()])[0],
-                0, len(self.modData["y"]) - 1
+                0, len(self.interpData["y"]) - 1
             )
 
-            self.cursor.setPos(self.modData["y"][index])
+            self.cursor.setPos(self.interpData["y"][index])
 
             infoText = "\t  <span style='color: hsv({:d},{:d}%,{:d}%);'>y={:5.3f}</span>".format(
                 self.config["color"][0],
                 self.config["color"][1],
                 self.config["color"][2],
-                self.modData["y"][index])
+                self.interpData["y"][index])
 
         return infoText
 
@@ -295,7 +322,7 @@ class SuperSpinner(QtWidgets.QLineEdit):
             else:
                 multiplier = 0.1
 
-            valueOffset = round( (self.mouseStartPos - e.pos().x()) * multiplier, 3)
+            valueOffset = round( (self.mouseStartPos + e.pos().x()) * multiplier, 3)
             value = self.startValue + valueOffset
             value = min((self.max, max((self.min, value))))
             self.setValue(value)

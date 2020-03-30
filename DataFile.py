@@ -12,7 +12,7 @@ import pyqtgraph as pg
 import pandas as pd
 import numpy as np
 from scipy import integrate
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter1d
 
 import Config
@@ -262,6 +262,7 @@ class DataFile(ListItem.ListItem):
         else:
             if self.config["xColumn"] == -1 or self.config["yColumn"] == -1:
                 self.modData = pd.DataFrame({'x': [0], 'y': [0]})
+                self.interpData = pd.DataFrame({'x': [0], 'y': [0]})
 
     def __toggleSettings(self):
         if self.settings.isHidden():
@@ -289,24 +290,13 @@ class DataFile(ListItem.ListItem):
         if self.config["xColumn"] == -1 or self.config["yColumn"] == -1:
             return
 
-        x = self.data[self.config["xColumn"]]
-        y = self.data[self.config["yColumn"]]
-
-        # apply gaussian filter
-        if self.config["filter"] > 0:
-            y = gaussian_filter1d(y, sigma=self.config["filter"])
-
-        # calculate numeric integration / differential
-        if self.config["integrate"] > 0:
-            for i in range(self.config["integrate"]):
-                for j, val in enumerate(x):
-                    y[j] = integrate.quad(lambda _: y[j], 0, val)[0]
-        elif self.config["integrate"] < 0:
-            for i in range(abs(self.config["integrate"])):
-                y = np.gradient(y, x[1] - x[0])
+        self.calculateCommon()
 
         # interpolate data
-        if self.config["interpolation"] == "Bezier" or self.config["interpolation"] == "Linear":
+        if self.config["interpolation"] != "Keine":
+
+            x = self.modData["x"]
+            y = self.modData["y"]
 
             # generate common x samples
             xnew = np.linspace(
@@ -315,23 +305,18 @@ class DataFile(ListItem.ListItem):
                 int(np.ceil(
                     ((x.max() - x.min()) / Config.DIVISION) * Config.PPD))
                 )
-            xnew = np.round(xnew, Config.PRECISION)
 
             if self.config["interpolation"] == "Bezier":
                 k = 3   # cubic
             else:
                 k = 1   # linear
 
-            spl = make_interp_spline(x, y, k=k)
+            spl = interp1d(x, y, kind=k, copy=False,
+                    assume_sorted=True, bounds_error=False, fill_value=0)
             y = spl(xnew)
-            x = xnew
-
-        # Add Offsets
-        x = x + self.config["xOffset"]
-        y = y + self.config["yOffset"]
 
         # save data
-        self.modData = pd.DataFrame({'x': x, 'y': y})
+        self.interpData = pd.DataFrame({'x': xnew, 'y': y})
 
         if self.sigCalc:
             self.sigCalc.emit()
