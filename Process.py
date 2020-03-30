@@ -234,7 +234,7 @@ class Process(ListItem.ListItem):
         self.fileList.deselectAll()
 
     def getSelected(self):
-        return None
+        return self.fileList.getSelected()
 
     def getCount(self, i):
         i = self.fileList.getCount(i)

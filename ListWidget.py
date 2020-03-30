@@ -12,6 +12,7 @@ class DeselectableListWidget(QtWidgets.QListWidget):
     sigDest = QtCore.pyqtSignal(["QListWidget"])
     sigTrigger = QtCore.pyqtSignal()
     sigDeselect = QtCore.pyqtSignal()
+    sigUpdateUI = QtCore.pyqtSignal()
 
     sigAddFile = QtCore.pyqtSignal("QString", "QListWidget")
 
@@ -111,12 +112,14 @@ class DeselectableListWidget(QtWidgets.QListWidget):
     def mousePressEvent(self, event):
         self.sigDeselect.emit()
         QtWidgets.QListWidget.mousePressEvent(self, event)
+        self.sigUpdateUI.emit()
 
     def startDrag(self, event):
         self.sigSource.emit(self)
         super().startDrag(event)
         self.sigTrigger.emit()
         self.sigCalc.emit()
+        self.sigUpdateUI.emit()
 
     def dropEvent(self, event):
         if event.mimeData().hasUrls():

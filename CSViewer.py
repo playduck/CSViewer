@@ -259,8 +259,9 @@ class CSViewerWindow(QtWidgets.QMainWindow):
 
         self.sourceList = None
         self.destList = None
-        self.deselectAll()
+
         self.reorder()
+        self.deselectAll()
 
     def addProcess(self):
         pc = Process.Process(getColor(self.fileList.getCount()))
@@ -304,6 +305,7 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         pc.fileList.sigDest.connect(self.endDrag)
         pc.fileList.sigTrigger.connect(self.doDrag)
         pc.fileList.sigDeselect.connect(self.deselectAll)
+        pc.fileList.sigUpdateUI.connect(self.updateDisabledButtons)
 
         pc.fileList.sigAddFile.connect(self.__addFileFromName)
 
