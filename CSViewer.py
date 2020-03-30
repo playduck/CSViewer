@@ -167,7 +167,7 @@ class CSViewerWindow(QtWidgets.QMainWindow):
             for index, item in enumerate(self.fileList.list):
                 info += item.updateCursor(mousePoint)
 
-            self.plot.info.setText(info)
+            self.plot.setInfoText(info)
 
     # scales plot based on all enabled objects
     def autoscale(self):

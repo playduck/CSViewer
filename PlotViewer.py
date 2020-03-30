@@ -51,3 +51,6 @@ class PlotViewer:
     def addPlot(self, item):
         self.plt.addItem(item.plot)
         self.plt.addItem(item.cursor, ignoreBounds=True)
+
+    def setInfoText(self, info):
+        self.info.setText(info)
