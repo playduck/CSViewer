@@ -164,7 +164,11 @@ class DataFile(ListItem.ListItem):
 
         self.reassignBtn = QtWidgets.QPushButton("Umbesetzen")
         self.reassignBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.reassignBtn.clicked.connect(self.__readData)
+        self.reassignBtn.clicked.connect(lambda _: [
+            self.__readData(),
+            self.__selectData(),
+            self.update()
+        ])
 
         self.GLayout.addWidget(self.x_offset_label,              0, 0)
         self.GLayout.addWidget(self.x_offset,                    0, 1)
