@@ -234,7 +234,6 @@ class ListItem(QtCore.QObject):
         raise NotImplementedError
 
     def getCount(self, i):
-        # print("DATA", i+1)
         return i+1
 
     def deleteSelected(self, plot, selected):

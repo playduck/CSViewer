@@ -177,8 +177,6 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         for item in self.fileList.list:
             considerations = considerations + item.autoscale()
 
-        print(considerations)
-
         self.plot.plt.autoRange(padding=0.2, items=considerations)
 
     def deleteSpecific(self, li):
