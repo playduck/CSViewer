@@ -28,6 +28,7 @@ class PlotViewer:
         self.plt.autoRange(padding=0.2)
         # self.plt.showAxis("top")
         # self.plt.showAxis("right")
+        # self.plt.setDownsampling(auto=True, mode="mean") # "peak" "mean" "subsample" # can cause crashes
         self.plt.showGrid(True, True, 0.6)
         self.plt.vb.setLimits(minXRange=0.001, minYRange=0.001)
         # self.plt.vb.setAspectLocked(ratio=1)
