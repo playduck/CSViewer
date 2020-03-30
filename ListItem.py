@@ -293,6 +293,7 @@ class SuperSpinner(QtWidgets.QLineEdit):
 
         self.mouseStartPos = False
         self.startValue = 0
+        self.value = 0
 
         self.min = self.max = 0
 
@@ -302,6 +303,7 @@ class SuperSpinner(QtWidgets.QLineEdit):
 
     def setValue(self, val):
         self.setText(str(val))
+        self.value = val
 
     def mouseDoubleClickEvent(self, e):
         self.setValue(0)
@@ -309,7 +311,7 @@ class SuperSpinner(QtWidgets.QLineEdit):
     def mousePressEvent(self, e):
         super().mousePressEvent(e)
         self.mouseStartPos = e.pos().x()
-        self.startValue = float(self.text())
+        self.startValue = self.value
 
     def mouseMoveEvent(self, e):
         if self.mouseStartPos:
@@ -321,8 +323,8 @@ class SuperSpinner(QtWidgets.QLineEdit):
             else:
                 multiplier = 0.1
 
-            valueOffset = round( (self.mouseStartPos + e.pos().x()) * multiplier, 3)
-            value = self.startValue + valueOffset
+            valueOffset = round( (self.mouseStartPos - e.pos().x()) * multiplier, 3)
+            value = self.startValue - valueOffset
             value = min((self.max, max((self.min, value))))
             self.setValue(value)
 
