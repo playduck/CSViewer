@@ -13,7 +13,7 @@ import pandas as pd
 import Config
 import Graph
 
-class ListItem(QtCore.QObject):
+class ListItem(QtWidgets.QWidget):
     sigUpdateUI = QtCore.pyqtSignal()
     sigCalc = QtCore.pyqtSignal()
 
@@ -37,7 +37,7 @@ class ListItem(QtCore.QObject):
                 "yColumn": -1,
                 "color": color,
                 "width": 3,
-                "interpolation": "Linear",
+                "interpolation": "linear",
                 "interpolationAmount":  100,
                 "integrate": 0,
                 "filter": 0

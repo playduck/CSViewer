@@ -138,7 +138,7 @@ class DataFile(ListItem.ListItem):
 
         # Interpolation
         self.interpolationBox = QtWidgets.QComboBox()
-        self.interpolationBox.addItems(["Keine", "Linear", "Bezier"])
+        self.interpolationBox.addItems(["keine", "linear", "slinear", "quadratic", "cubic", "nearest", "zero", "previous", "next"])
         self.interpolationBox.setCurrentText(self.config["interpolation"])
         self.interpolationBox.textHighlighted.connect(lambda x, who="interpolation": self.applyChange(x, who))
         self.interpolationLabel = QtWidgets.QLabel("Interpolation:")
@@ -300,7 +300,7 @@ class DataFile(ListItem.ListItem):
         y = self.modData["y"]
 
         # interpolate data
-        if self.config["interpolation"] != "Keine":
+        if self.config["interpolation"] != "keine":
 
             # generate common x samples
             xnew = np.linspace(
@@ -310,12 +310,7 @@ class DataFile(ListItem.ListItem):
                     ((x.max() - x.min()) / Config.DIVISION) * Config.PPD))
                 )
 
-            if self.config["interpolation"] == "Bezier":
-                k = 3   # cubic
-            else:
-                k = 1   # linear
-
-            spl = interp1d(x, y, kind=k, copy=False,
+            spl = interp1d(x, y, kind=self.config["interpolation"], copy=False,
                     assume_sorted=True, bounds_error=False, fill_value=0)
             y = spl(xnew)
             x = xnew

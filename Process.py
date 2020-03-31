@@ -149,19 +149,19 @@ class Process(ListItem.ListItem):
             if item.ignore:
                 break
 
-            if item.config["interpolation"] == "Bezier":
-                k = 3
+            if isinstance(item, Cursor.Cursor):
+                 values = np.full(len(x), item.config["yOffset"])
             else:
-                # no interpolation is treated as linear
-                # any operations wouldn't work otherwise since matching
-                # sampling rates cannot be guaranteed
-                k = 1
+                if item.config["interpolation"] == "keine":
+                    iterpolation = "linear"
+                else:
+                    interpolation = item.config["interpolation"]
 
-            # create spline, ignoreing all out-of-range values
-            spl = interp1d(item.modData["x"], item.modData["y"],
-                    kind=k, copy=False, assume_sorted=True,
-                    bounds_error = False, fill_value=0)
-            values = spl(x)
+                # create spline, ignoreing all out-of-range values
+                spl = interp1d(item.modData["x"], item.modData["y"],
+                        kind=interpolation, copy=False, assume_sorted=True,
+                        bounds_error = False, fill_value=0)
+                values = spl(x)
 
             # apply Operation otherwise just add
             for i in range(len(x)):
