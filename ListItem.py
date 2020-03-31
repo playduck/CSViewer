@@ -30,6 +30,7 @@ class ListItem(QtWidgets.QWidget):
             self.config = {
                 "highlight": False,
                 "enabled": True,
+                "cursorEnabled": True,
                 "zIndex": 0,
                 "xOffset": 0,
                 "yOffset": 0,
@@ -160,18 +161,21 @@ class ListItem(QtWidgets.QWidget):
                                 self.config["color"][2] / 100, 0.2)
         highlightPen = pg.mkPen(color=highlightColor, width=self.config["width"] * 4 + 10)
 
+        # set cursors
+        if self.config["cursorEnabled"]:
+            self.cursor.setPen(pg.mkPen(color=color, width=max(1, self.config["width"] / 2)))
+        else:
+            self.cursor.setPen(pg.mkPen(color=(0, 0, 0, 0), width=0))
+
         # hide if not enabled
         if not self.config["enabled"]:
-            self.cursor.setPen(pg.mkPen(color=(0, 0, 0, 0), width=0))
             self.plot.setData(pen=None, symbolPen=None, symbolBrush=None, shadowPen=None)
 
         else:
-            # set cursors
-            self.cursor.setPen(pg.mkPen(color=color, width=max(1, self.config["width"] / 2)))
             self.cursor.setZValue(self.config["zIndex"])
 
             # set to appropritae interpolation with respect to highlighting
-            if self.config["interpolation"] == "Keine":
+            if self.config["interpolation"] == "keine":
                 if self.config["highlight"]:
                     self.plot.setData(pen=None, symbolPen=pen, symbolBrush=highlightColor, shadowPen=None)
                 else:
@@ -241,7 +245,7 @@ class ListItem(QtWidgets.QWidget):
 
     def updateCursor(self, mousePoint):
         infoText = ""
-        if self.config.get("enabled"):
+        if self.config.get("enabled") or self.config.get("cursorEnabled"):
             # find nearest x-sample to mouse-x pos
             index = np.clip(
                 np.searchsorted(self.interpData["x"],
@@ -249,7 +253,8 @@ class ListItem(QtWidgets.QWidget):
                 0, len(self.interpData["y"]) - 1
             )
 
-            self.cursor.setPos(self.interpData["y"][index])
+            if self.config.get("cursorEnabled"):
+                self.cursor.setPos(self.interpData["y"][index])
 
             infoText = "\t  <span style='color: hsv({:d},{:d}%,{:d}%);'>y={:5.3f}</span>".format(
                 self.config["color"][0],
@@ -267,11 +272,13 @@ class ListItem(QtWidgets.QWidget):
 
     def setHighlight(self, highlight):
         self.config["highlight"] = highlight
-        self.plot.setDraggable(highlight)
+        if isinstance(self.plot, Graph.Graph):
+            self.plot.setDraggable(highlight)
         self.updatePlot()
 
     def setEnabled(self, enabled):
         self.config["enabled"] = enabled
+        self.config["cursorEnabled"] = enabled
         self.updatePlot()
 
     def setZIndex(self, zIndex):

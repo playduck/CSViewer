@@ -17,6 +17,7 @@ from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter1d
 
 import Config
+import Cursor
 import ListItem
 import ListWidget
 
@@ -112,10 +113,12 @@ class Process(ListItem.ListItem):
 
         if len(self.fileList.list) == 0:
             self.ignore = True
+            self.config["cursorEnabled"] = False
             self.modData = pd.DataFrame({'x': [0], 'y': [0]})
             self.interpData = pd.DataFrame({'x': [0], 'y': [0]})
             return
         self.ignore = False
+        self.config["cursorEnabled"] = True
 
         # find entire range of all items
         start = np.Inf

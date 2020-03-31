@@ -14,6 +14,7 @@ import ListWidget
 import PlotViewer
 import DataFile
 import Process
+import Cursor
 
 import pyqtgraph as pg
 import pandas as pd
@@ -94,11 +95,10 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         self.addProcessBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.addProcessBtn)
 
-        self.setMaxBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/set_max.png")), "Maximum")
-        # self.setMaxBtn.clicked.connect()
-        self.setMaxBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.setMaxBtn.setDisabled(True) # TODO
-        self.toolbar.addWidget(self.setMaxBtn)
+        self.addCursorBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/set_max.png")), "Cursor")
+        self.addCursorBtn.clicked.connect(self.addCursor)
+        self.addCursorBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.toolbar.addWidget(self.addCursorBtn)
 
         self.removeSelectedBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/delete_select.png")), "Löschen")
         self.removeSelectedBtn.clicked.connect(self.deleteSelected)
@@ -284,6 +284,11 @@ class CSViewerWindow(QtWidgets.QMainWindow):
             list.addItem(df)
             self.plot.addPlot(df)
             self.reorder()
+
+    def addCursor(self):
+        c = Cursor.Cursor(getColor(self.fileList.getCount()))
+        self.fileList.addItem(c)
+        self.plot.addPlot(c)
 
     def __createFile(self, name):
         return DataFile.DataFile(
