@@ -10,6 +10,7 @@ from pathlib import Path
 import json
 
 import Config
+import Optimizer
 import ListWidget
 import PlotViewer
 import DataFile
@@ -130,9 +131,8 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         self.toolbar.addSeparator()
 
         self.claculateBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/magic.png")), "Berechnen")
-        # self.claculateBtn.clicked.connect()
+        self.claculateBtn.clicked.connect(lambda _: Optimizer.optimizeTime(self)) # TODO pass selected list or self
         self.claculateBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.claculateBtn.setDisabled(True) # TODO
         self.toolbar.addWidget(self.claculateBtn)
 
         self.spacer = QtWidgets.QWidget()

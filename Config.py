@@ -25,7 +25,7 @@ DIVISION = 1
 # amount of points to interpolate to for each division
 PPD = 100
 # rounding values after comma
-PRECISION = 4
+PRECISION = 8
 
 def getResource(path):
     root = Path()
