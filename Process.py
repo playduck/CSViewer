@@ -156,7 +156,7 @@ class Process(ListItem.ListItem):
                  values = np.full(len(x), item.config["yOffset"])
             else:
                 if item.config["interpolation"] == "keine":
-                    iterpolation = "linear"
+                    interpolation = "linear"
                 else:
                     interpolation = item.config["interpolation"]
 
