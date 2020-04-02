@@ -79,24 +79,29 @@ class ListItem(QtWidgets.QWidget):
 
     def __contextMenuEvent(self, event):
         menu = QtGui.QMenu(self.frame)
-        menu.addAction(QtGui.QAction('Exportieren', self))
+        menu.addAction(QtGui.QAction('Interpolation Exportieren', self))
+        menu.addAction(QtGui.QAction('Modifikation Exportieren', self))
         menu.addSeparator()
         menu.addAction(QtGui.QAction('Löschen', self))
 
         action = menu.exec_(self.frame.mapToGlobal(event))
 
         if action:
-            if action.text() == "Exportieren":
-                self.__export()
+            if "Exportieren" in action.text():
+                self.__export(action.tetx())
             elif action.text() == "Löschen":
                 self.sigDeleteMe.emit(self)
 
-    def __export(self):
+    def __export(self, what):
         options = QtWidgets.QFileDialog.Options()
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(None, "Exportieren", "",
-                                                  "CSV Datei (*.csv);;Alle Dateinen (*)", options=options)
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(None, what, "",
+                        "CSV Datei (*.csv);;Alle Dateinen (*)", options=options)
         if filename:
-            self.interpData.to_csv(filename, encoding='utf-8', index=False)
+            if "Interpolation" in what:
+                self.interpData.to_csv(filename, encoding='utf-8', index=False)
+            elif "Modifikation" in what:
+                self.modData.to_csv(filename, encoding='utf-8', index=False)
+
 
 # ----------------------------------- local ---------------------------------- #
 
