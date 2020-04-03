@@ -306,9 +306,12 @@ class DataFile(ListItem.ListItem):
             xnew = np.linspace(
                 x.min(), # from
                 x.max(), # to
-                int(np.ceil(
-                    ((x.max() - x.min()) / Config.DIVISION) * Config.PPD))
-                )
+                int(max([
+                    np.ceil(((x.max() - x.min()) / Config.DIVISION) * Config.PPD),
+                    Config.PPD,
+                    len(x)
+                ]))
+            )
 
             spl = interp1d(x, y, kind=self.config["interpolation"], copy=False,
                     assume_sorted=True, bounds_error=False, fill_value=0)

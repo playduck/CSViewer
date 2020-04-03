@@ -143,9 +143,11 @@ class Process(ListItem.ListItem):
         x = np.linspace(
             start,
             end,
-            int(np.ceil(
-                (abs(end - start) / Config.DIVISION) * Config.PPD))
-            )
+            int(max([
+                np.ceil(((end - start) / Config.DIVISION) * Config.PPD),
+                Config.PPD
+            ]))
+        )
         y = np.full(len(x), np.nan)
 
         for item in self.fileList.list:
