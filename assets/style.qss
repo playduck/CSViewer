@@ -127,6 +127,14 @@ QComboBox {
     selection-color: palette(Base);
 }
 
+/* ------------------------------ Progress Bar ------------------------------ */
+
+QProgressBar {
+    border: 2px solid palette(Base);
+    border-radius: 5px;
+    text-align: center;
+}
+
 /* --------------------------------- windows -------------------------------- */
 
 #plotWindow {
