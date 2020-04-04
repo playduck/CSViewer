@@ -88,7 +88,7 @@ class ListItem(QtWidgets.QWidget):
 
         if action:
             if "Exportieren" in action.text():
-                self.__export(action.tetx())
+                self.__export(action.text())
             elif action.text() == "Löschen":
                 self.sigDeleteMe.emit(self)
 
