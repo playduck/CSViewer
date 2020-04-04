@@ -297,28 +297,45 @@ class SuperSpinner(QtWidgets.QLineEdit):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setValidator(QtGui.QDoubleValidator(parent=self))
-        self.setMaxLength(5)
-        self.setReadOnly(True)
-        self.textChanged.connect(lambda t: self.valueChanged.emit(float(t)))
+        self.setValidator(QtGui.QDoubleValidator(0.0, 1000.0, Config.PRECISION, parent=self))
+
+        self.textChanged.connect(self.__handleChange)
         self.setCursor(QtCore.Qt.SizeHorCursor)
 
+        self.beeingEdited = False
         self.mouseStartPos = False
-        self.startValue = 0
-        self.value = 0
+        self.startValue = 0.0
+        self.value = 0.0
 
-        self.min = self.max = 0
+        self.min = self.max = 0.0
+        self.setValue(0.0, True)
+
+    def __handleChange(self, t):
+        if (self.beeingEdited or self.mouseStartPos) and t and float(t):
+            val = round(float(t), Config.PRECISION)
+            self.valueChanged.emit(val)
 
     def setRange(self, min, max):
         self.min = min
         self.max = max
 
-    def setValue(self, val):
-        self.setText(str(val))
-        self.value = val
+    def setValue(self, val, override=False):
+        if not self.beeingEdited or override:
+            val = round(val, Config.PRECISION)
+            self.setText(str(val))
+            self.value = val
+
+    def focusInEvent(self, QFocusEvent):
+        self.beeingEdited = True
+        return super().focusInEvent(QFocusEvent)
+
+    def focusOutEvent(self, QFocusEvent):
+        self.beeingEdited = False
+        return super().focusOutEvent(QFocusEvent)
 
     def mouseDoubleClickEvent(self, e):
-        self.setValue(0)
+        self.setValue(0.0, True)
+        self.valueChanged.emit(0.0)
 
     def mousePressEvent(self, e):
         super().mousePressEvent(e)
@@ -335,10 +352,10 @@ class SuperSpinner(QtWidgets.QLineEdit):
             else:
                 multiplier = 0.1
 
-            valueOffset = round( (self.mouseStartPos - e.pos().x()) * multiplier, 3)
+            valueOffset = ( self.mouseStartPos - e.pos().x() ) * multiplier
             value = self.startValue - valueOffset
             value = min((self.max, max((self.min, value))))
-            self.setValue(value)
+            self.setValue(value, True)
 
     def mouseReleaseEvent(self, e):
         super().mouseReleaseEvent(e)
