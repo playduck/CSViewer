@@ -300,7 +300,7 @@ class DataFile(ListItem.ListItem):
         y = self.modData["y"]
 
         # interpolate data
-        if self.config["interpolation"] != "keine":
+        if self.config["interpolation"] != "keine" or self.config["interpolation"] == "linear":
 
             # generate common x samples
             xnew = np.linspace(
