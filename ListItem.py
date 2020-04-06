@@ -297,9 +297,9 @@ class SuperSpinner(QtWidgets.QLineEdit):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setValidator(QtGui.QDoubleValidator(0.0, 1000.0, Config.PRECISION, parent=self))
+        self.setValidator(QtGui.QDoubleValidator(-100000, 100000, Config.PRECISION, parent=self))
 
-        self.textChanged.connect(self.__handleChange)
+        self.editingFinished.connect(self.__handleChange)
         self.setCursor(QtCore.Qt.SizeHorCursor)
 
         self.beeingEdited = False
@@ -310,7 +310,8 @@ class SuperSpinner(QtWidgets.QLineEdit):
         self.min = self.max = 0.0
         self.setValue(0.0, True)
 
-    def __handleChange(self, t):
+    def __handleChange(self):
+        t = self.text()
         if (self.beeingEdited or self.mouseStartPos) and t and float(t):
             val = round(float(t), Config.PRECISION)
             self.valueChanged.emit(val)
@@ -324,6 +325,7 @@ class SuperSpinner(QtWidgets.QLineEdit):
             val = round(val, Config.PRECISION)
             self.setText(str(val))
             self.value = val
+            self.valueChanged.emit(self.value)
 
     def focusInEvent(self, QFocusEvent):
         self.beeingEdited = True
@@ -346,7 +348,7 @@ class SuperSpinner(QtWidgets.QLineEdit):
         if self.mouseStartPos:
 
             if e.modifiers() == QtCore.Qt.ShiftModifier:
-                multiplier = 1
+                multiplier = 10
             elif e.modifiers() == QtCore.Qt.ControlModifier:
                 multiplier = 0.01
             else:
@@ -355,7 +357,9 @@ class SuperSpinner(QtWidgets.QLineEdit):
             valueOffset = ( self.mouseStartPos - e.pos().x() ) * multiplier
             value = self.startValue - valueOffset
             value = min((self.max, max((self.min, value))))
-            self.setValue(value, True)
+            self.value = value
+            self.setText(str(value))
+            self.valueChanged.emit(self.value)
 
     def mouseReleaseEvent(self, e):
         super().mouseReleaseEvent(e)
