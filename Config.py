@@ -6,6 +6,9 @@
 import sys
 from pathlib import Path
 
+SEPERATOR = ";"
+DECIMAL = ","
+
 # Highest possible Z-Index
 Z_IDX_TOP = 201
 
@@ -26,6 +29,8 @@ DIVISION = 1
 PPD = 100
 # rounding values after comma
 PRECISION = 8
+
+MAX = 2000
 
 def getResource(path):
     root = Path()
