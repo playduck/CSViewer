@@ -69,14 +69,15 @@ class Graph(pg.PlotDataItem):
         # Decide by how much we should downsample
         ds = int((stop-start) / self.limit) + 1
 
-        print(start, stop, ds)
+        print(">>", stop-start, ds)
 
         if ds == 1:
             # Small enough to display with no intervention.
             visible = y
             scale = 1
+            start = 0
         else:
-            ds *= 4
+            # ds *= 4
             # Here convert data into a down-sampled array suitable for visualizing.
             # Must do this piecewise to limit memory usage.
             samples = 1 + ((stop-start) // ds)
@@ -84,7 +85,6 @@ class Graph(pg.PlotDataItem):
             sourcePtr = start
             targetPtr = 0
 
-            # read data in chunks of ~1M samples
             chunkSize = (100000//ds) * ds
             while sourcePtr < stop-1:
                 chunk = y[sourcePtr:min(stop,sourcePtr+chunkSize)]

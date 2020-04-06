@@ -7,7 +7,7 @@ import os
 import sys
 import copy
 from pathlib import Path
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 import pyqtgraph as pg
 
 import pandas as pd
@@ -75,7 +75,7 @@ class Process(ListItem.ListItem):
         self.operationBox = QtWidgets.QComboBox()
         self.operationBox.addItems(["Addition", "Subtraktion", "Multiplikation", "Division"])
         self.operationBox.setCurrentText(self.config["operation"])
-        self.operationBox.textHighlighted.connect(lambda x, who="operation": self.applyChange(x, who))
+        self.operationBox.currentTextChanged.connect(lambda x, who="operation": self.applyChange(x, who))
         self.Hlayout.addWidget(self.operationBox)
 
         self.settingsBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/left.png")), "")
@@ -110,6 +110,8 @@ class Process(ListItem.ListItem):
 
     # applies all calculations and interpolation
     def recalculate(self):
+        dlg = pg.ProgressDialog("Berechnung", cancelText=None, busyCursor=False, disable=False, wait=250)
+        dlg.setValue(0)
 
         if len(self.fileList.list) == 0:
             self.ignore = True
@@ -122,18 +124,28 @@ class Process(ListItem.ListItem):
         # find entire range of all items
         start = np.Inf
         end =  -np.Inf
+        points = 0
+
+        dlg += 5
+        QtTest.QTest.qWait(20)
 
         for index, item in enumerate(self.fileList.list):
+            dlg += 1
             if item.ignore:
                 break
 
             imin = item.interpData["x"].min()
             imax = item.interpData["x"].max()
+            pts = len(item.interpData["x"])
 
             if imin < start:
                 start = imin
             if imax > end:
                 end = imax
+            if pts > points:
+                points = pts
+
+        dlg += 5
 
         if start == np.Inf or end == -np.Inf:
             return
@@ -142,44 +154,54 @@ class Process(ListItem.ListItem):
         x = np.linspace(
             start,
             end,
-            int(max([
-                np.ceil(((end - start) / Config.DIVISION) * Config.PPD),
-                Config.PPD
-            ]))
+            points
         )
         y = np.full(len(x), np.nan)
 
+        dlg += 5
+        QtTest.QTest.qWait(20)
+
         for item in self.fileList.list:
+            dlg += 1
             if item.ignore:
                 break
 
             if isinstance(item, Cursor.Cursor):
                  values = np.full(len(x), item.config["yOffset"])
             else:
-                if item.config["interpolation"] == "keine":
-                    interpolation = "linear"
+                if item.config["interpolation"] == "keine" or item.config["interpolation"] == "linear":
+                    interpolation = "slinear"
                 else:
                     interpolation = item.config["interpolation"]
 
+                dlg += 1
                 # create spline, ignoreing all out-of-range values
                 spl = interp1d(item.modData["x"], item.modData["y"],
                         kind=interpolation, copy=False, assume_sorted=True,
                         bounds_error = False, fill_value=0)
+                dlg += 1
                 values = spl(x)
 
             # apply Operation otherwise just add
+            dlg += 1
+            inc = 1 // (20 / len(x))
             for i in range(len(x)):
                 if np.isnan(y[i]):
                     y[i] = values[i]
                 else:
                     y[i] = self.__doOperation(y[i], values[i])
 
+                if i % inc == 0:
+                    dlg += 1
+
         # remove all remaining NANs
         y[np.isnan(y)] = 0
+        dlg += 5
 
         # apply gaussian filter
         if self.config["filter"] > 0:
             y = gaussian_filter1d(y, sigma=self.config["filter"])
+        dlg += 5
 
         # calculate numeric integration / differential
         if self.config["integrate"] > 0:
@@ -190,12 +212,18 @@ class Process(ListItem.ListItem):
             for i in range(abs(self.config["integrate"])):
                 y = np.gradient(y, x[1] - x[0])
 
+        dlg += 5
+
         # Add Offsets
         x = x + self.config["xOffset"]
         y = y + self.config["yOffset"]
 
+        print("process length", len(x), len(y))
+
         # save data
-        self.interpData = pd.DataFrame({'x': x, 'y': y})
+        self.interpData = {'x': x, 'y': y}
+
+        dlg.setValue(100)
         if self.sigCalc:
             self.sigCalc.emit()
 

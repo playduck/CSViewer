@@ -97,17 +97,6 @@ class ListItem(QtWidgets.QWidget):
             elif action.text() == "Löschen":
                 self.sigDeleteMe.emit(self)
 
-    def __export(self, what):
-        options = QtWidgets.QFileDialog.Options()
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(None, what, "",
-                        "CSV Datei (*.csv);;Alle Dateinen (*)", options=options)
-        if filename:
-            if "Interpolation" in what:
-                self.interpData.to_csv(filename, encoding='utf-8', index=False)
-            elif "Modifikation" in what:
-                self.modData.to_csv(filename, encoding='utf-8', index=False)
-
-
 # ----------------------------------- local ---------------------------------- #
 
     def showError(self, title, message):
@@ -219,7 +208,8 @@ class ListItem(QtWidgets.QWidget):
 
         # if self.dataUpdated:
         # self.plot.setData(self.interpData["x"], self.interpData["y"])
-        self.plot.setDownsampleData(self.interpData["x"], self.interpData["y"])
+        if self.config["enabled"]:
+            self.plot.setDownsampleData(self.interpData["x"], self.interpData["y"])
         self.dataUpdated = False
 
     def update(self):
@@ -334,15 +324,17 @@ class SuperSpinner(QtWidgets.QLineEdit):
         t = self.text()
         if (self.beeingEdited or self.mouseStartPos) and t and float(t):
             val = round(float(t), Config.PRECISION)
-            self.valueChanged.emit(val)
+            # self.valueChanged.emit(val)
+            print("Set Val")
+            self.setValue(val, True)
 
     def setRange(self, min, max):
         self.min = min
         self.max = max
 
     def setValue(self, val, override=False):
-        if not self.beeingEdited or override:
-            val = round(val, Config.PRECISION)
+        val = round(val, Config.PRECISION)
+        if (not self.beeingEdited or override) and (val != self.value):
             self.setText(str(val))
             self.value = val
             self.valueChanged.emit(self.value)

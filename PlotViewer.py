@@ -18,7 +18,7 @@ class PlotViewer:
     def __init__(self, parent):
         self.parent = parent
 
-        pg.setConfigOptions(antialias=False, background=None, useWeave=True, leftButtonPan=False)
+        pg.setConfigOptions(antialias=False, background=None, useWeave=True)
 
         self.win = pg.GraphicsWindow()
         self.win.setObjectName("plotWindow")
