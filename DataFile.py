@@ -140,7 +140,7 @@ class DataFile(ListItem.ListItem):
         self.interpolationBox = QtWidgets.QComboBox()
         self.interpolationBox.addItems(["keine", "linear", "slinear", "quadratic", "cubic", "nearest", "zero", "previous", "next"])
         self.interpolationBox.setCurrentText(self.config["interpolation"])
-        self.interpolationBox.textHighlighted.connect(lambda x, who="interpolation": self.applyChange(x, who))
+        self.interpolationBox.currentTextChanged.connect(lambda x, who="interpolation": self.applyChange(x, who))
         self.interpolationLabel = QtWidgets.QLabel("Interpolation:")
         self.interpolationLabel.setBuddy(self.interpolationBox)
         self.interpolationLabel.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
@@ -291,16 +291,23 @@ class DataFile(ListItem.ListItem):
 
     # applies all calculations and interpolation
     def recalculate(self):
+        dlg = pg.ProgressDialog("Berechnung", cancelText=None, busyCursor=False, disable=False, wait=250)
+        dlg.setValue(0)
+
         if self.config["xColumn"] == -1 or self.config["yColumn"] == -1:
             return
 
-        self.calculateCommon()
+        dlg += 10
 
-        x = self.modData["x"]
-        y = self.modData["y"]
+        self.calculateCommon(dlg)
+
+        x = self.modData["x"].values
+        y = self.modData["y"].values
+
+        dlg += 10
 
         # interpolate data
-        if self.config["interpolation"] != "keine" or self.config["interpolation"] == "linear":
+        if self.config["interpolation"] != "keine" and self.config["interpolation"] != "linear":
 
             # generate common x samples
             xnew = np.linspace(
@@ -313,13 +320,22 @@ class DataFile(ListItem.ListItem):
                 ]))
             )
 
+            dlg += 10
             spl = interp1d(x, y, kind=self.config["interpolation"], copy=False,
                     assume_sorted=True, bounds_error=False, fill_value=0)
+            dlg += 10
             y = spl(xnew)
             x = xnew
+            dlg += 10
+
+        dlg += 10
+
+        self.dataUpdated = True
 
         # save data
-        self.interpData = pd.DataFrame({'x': x, 'y': y})
+        self.interpData = {'x': x, 'y': y}
+
+        dlg.setValue(100)
 
         if self.sigCalc:
             self.sigCalc.emit()

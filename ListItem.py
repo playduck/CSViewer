@@ -49,6 +49,7 @@ class ListItem(QtWidgets.QWidget):
         self.modData = None
         self.interpData = None
         self.ignore = False
+        self.dataUpdated = False
 
         self.plot = Graph.Graph(symbol='o', symbolSize=5)
         self.plot.sigPositionDelta.connect(self.__applyDelta)
@@ -122,26 +123,39 @@ class ListItem(QtWidgets.QWidget):
 
         error_dialog.exec_()
 
-    def calculateCommon(self):
+    def calculateCommon(self, dlg=None):
         x = self.data[self.config["xColumn"]].copy()
         y = self.data[self.config["yColumn"]].copy()
+
+        if dlg:
+            dlg += 10
 
         # apply gaussian filter
         if self.config["filter"] > 0:
             y = gaussian_filter1d(y, sigma=self.config["filter"])
+
+        if dlg:
+            dlg += 5
 
         # calculate numeric integration / differential
         if self.config["integrate"] > 0:
             for i in range(self.config["integrate"]):
                 for j, val in enumerate(x):
                     y[j] = integrate.quad(lambda _: y[j], 0, val)[0]
+                if dlg:
+                    dlg += 1
         elif self.config["integrate"] < 0:
             for i in range(abs(self.config["integrate"])):
                 y = np.gradient(y, x[1] - x[0])
+                if dlg:
+                    dlg += 1
 
         # Add Offsets
         x = x + self.config["xOffset"]
         y = y + self.config["yOffset"]
+
+        if dlg:
+            dlg += 10
 
         self.modData = pd.DataFrame({'x': x, 'y': y})
 
@@ -152,7 +166,6 @@ class ListItem(QtWidgets.QWidget):
         raise NotImplementedError
 
     def updatePlot(self):
-
         # Calculate all colors
         color = QtGui.QColor()
         color.setHsvF(  self.config["color"][0] / 360,
@@ -200,7 +213,10 @@ class ListItem(QtWidgets.QWidget):
                 self.cursor.setZValue(self.config["zIndex"])
                 self.plot.setZValue(self.config["zIndex"])
 
-        self.plot.setData(np.array(self.interpData["x"]), np.array(self.interpData["y"]))
+        # if self.dataUpdated:
+        # self.plot.setData(self.interpData["x"], self.interpData["y"])
+        self.plot.setDownsampleData(self.interpData["x"], self.interpData["y"])
+        self.dataUpdated = False
 
     def update(self):
         self.recalculate()
