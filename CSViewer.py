@@ -56,6 +56,7 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         # Viewer handles the plotting section
         viewer = QtWidgets.QVBoxLayout()
         self.plot = PlotViewer.PlotViewer(self)
+        self.plot.plt.vb.sigRangeChanged.connect(self.recalculateDownsampling)
         self.plotProxy = pg.SignalProxy(self.plot.plt.scene().sigMouseMoved,
              rateLimit=60, slot=self.cursorUpdate)
         viewer.addLayout(self.plot.layout)
@@ -150,6 +151,10 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.plotView)
 
         self.show()
+
+    def recalculateDownsampling(self):
+        for item in self.fileList.list:
+            item.updatePlot()
 
     # disable context menu
     def createPopupMenu(self):

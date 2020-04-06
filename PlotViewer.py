@@ -18,7 +18,7 @@ class PlotViewer:
     def __init__(self, parent):
         self.parent = parent
 
-        pg.setConfigOptions(antialias=True, background=None, useWeave=True)
+        pg.setConfigOptions(antialias=False, background=None, useWeave=True, leftButtonPan=False)
 
         self.win = pg.GraphicsWindow()
         self.win.setObjectName("plotWindow")
@@ -52,6 +52,13 @@ class PlotViewer:
     def addPlot(self, item):
         self.plt.addItem(item.plot)
         self.plt.addItem(item.cursor, ignoreBounds=True)
+
+        try:
+            item.plot.setData(clipToView=True)
+            item.plot.setData(autoDownsample=True, downsampleMethod="peak")
+            item.updatePlot()
+        except:
+            pass
 
     def setInfoText(self, info):
         self.info.setText(info)

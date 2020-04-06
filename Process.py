@@ -114,8 +114,7 @@ class Process(ListItem.ListItem):
         if len(self.fileList.list) == 0:
             self.ignore = True
             self.config["cursorEnabled"] = False
-            self.modData = pd.DataFrame({'x': [0], 'y': [0]})
-            self.interpData = pd.DataFrame({'x': [0], 'y': [0]})
+            self.modData = self.interpData = pd.DataFrame({'x': [0, 0.00001], 'y': [0, 0]})
             return
         self.ignore = False
         self.config["cursorEnabled"] = True
@@ -220,6 +219,11 @@ class Process(ListItem.ListItem):
             return a / b
         else:
             return -1
+
+    def updatePlot(self):
+        for item in self.fileList.list:
+            item.updatePlot()
+        return super().updatePlot()
 
     # reflects updated values in the UI
     def updateUI(self):
