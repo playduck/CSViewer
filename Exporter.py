@@ -26,17 +26,7 @@ def __saveDialog(filetype):
 # function based on
 # https://stackoverflow.com/a/41586167/12231900
 def __exportWave(data, filename):
-    SMPLS = 44100
-    # normalize values to -1.0 to 1.0
-    arr = np.array(data.interpData["y"])
-    arr = np.divide(arr, np.max(np.abs(data.interpData["y"])))
-
-    # upscale values to 16 bits
-    amplitude = np.iinfo(np.int16).max
-    arr = np.multiply(arr, amplitude)
-    # samples only go from -(2**15) to (2**15)
-    # => missing one possible value at (2**15)-1
-
+    SMPLS = 8000
     # resample values with same algorithms to match sampling rate
     xnew = np.linspace(
         data.interpData["x"].min(), # from
@@ -47,10 +37,19 @@ def __exportWave(data, filename):
     )
     spl = interp1d(data.interpData["x"], data.interpData["y"], kind=data.config["interpolation"], copy=True,
             assume_sorted=True, bounds_error=False, fill_value=0)
-    data_resampled = spl(xnew)
+
+    # normalize values to -1.0 to 1.0
+    arr = spl(xnew)
+    arr = np.divide(arr, np.max(np.abs(arr)))
+
+    # upscale values to 16 bits
+    amplitude = np.iinfo(np.int16).max
+    arr = np.multiply(arr, amplitude)
+    # samples only go from -(2**15) to (2**15)
+    # => missing one possible value at (2**15)-1
 
     # convert for 16 bit PCM
-    data_resampled = data_resampled.astype(np.int16)
+    data_resampled = arr.astype(np.int16)
 
     wavfile.write(filename, SMPLS, data_resampled)
 
