@@ -5,6 +5,7 @@
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 from scipy import integrate
+from scipy.signal import decimate
 from scipy.interpolate import make_interp_spline
 from scipy.ndimage.filters import gaussian_filter1d
 import pyqtgraph as pg
@@ -12,6 +13,7 @@ import numpy as np
 import pandas as pd
 import Config
 import Graph
+import Exporter
 
 class ListItem(QtWidgets.QWidget):
     sigUpdateUI = QtCore.pyqtSignal()
@@ -82,6 +84,7 @@ class ListItem(QtWidgets.QWidget):
         menu = QtGui.QMenu(self.frame)
         menu.addAction(QtGui.QAction('Interpolation Exportieren', self))
         menu.addAction(QtGui.QAction('Modifikation Exportieren', self))
+        menu.addAction(QtGui.QAction('Wave Exportieren', self))
         menu.addSeparator()
         menu.addAction(QtGui.QAction('Löschen', self))
 
@@ -89,7 +92,8 @@ class ListItem(QtWidgets.QWidget):
 
         if action:
             if "Exportieren" in action.text():
-                self.__export(action.text())
+                Exporter.export(self, action.text())
+                # self.__export(action.text())
             elif action.text() == "Löschen":
                 self.sigDeleteMe.emit(self)
 
