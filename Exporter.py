@@ -9,6 +9,7 @@ import numpy as np
 from scipy.io import wavfile
 from scipy.signal import resample
 import wave
+import Config
 
 def __getFileType(export):
         if "Interpolation" in export or "Modifikation" in export:
@@ -49,8 +50,8 @@ def export(data, export):
 
     if filename:
         if "Interpolation" in export:
-            data.interpData.to_csv(filename, encoding='utf-8', index=False)
+            pd.DataFrame(data.interpData).to_csv(filename,sep=Config.SEPERATOR, decimal=Config.DECIMAL, encoding='utf-8', index=False)
         elif "Modifikation" in export:
-            data.modData.to_csv(filename, encoding='utf-8', index=False)
+            pd.DataFrame(data.modData).to_csv(filename,sep=Config.SEPERATOR, decimal=Config.DECIMAL, encoding='utf-8', index=False)
         elif "Wave" in export:
             __exportWave(data, filename)

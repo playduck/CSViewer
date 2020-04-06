@@ -287,7 +287,7 @@ class DataFile(ListItem.ListItem):
             self.data = pd.DataFrame([0], [0])
             return
 
-        self.data = pd.read_csv(self.filename, sep=",", header=0, skipinitialspace=True)
+        self.data = pd.read_csv(self.filename, sep=Config.SEPERATOR, decimal=Config.DECIMAL, header=0, skipinitialspace=True)
 
     # applies all calculations and interpolation
     def recalculate(self):
@@ -313,11 +313,11 @@ class DataFile(ListItem.ListItem):
             xnew = np.linspace(
                 x.min(), # from
                 x.max(), # to
-                int(max([
+                int(min([max([
                     np.ceil(((x.max() - x.min()) / Config.DIVISION) * Config.PPD),
                     Config.PPD,
                     len(x)
-                ]))
+                ]), Config.MAX]))
             )
 
             dlg += 10
