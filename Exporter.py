@@ -7,7 +7,7 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 import pandas as pd
 import numpy as np
 from scipy.io import wavfile
-from scipy.signal import resample
+from scipy.interpolate import interp1d
 import wave
 import Config
 
@@ -26,6 +26,7 @@ def __saveDialog(filetype):
 # function based on
 # https://stackoverflow.com/a/41586167/12231900
 def __exportWave(data, filename):
+    SMPLS = 44100
     # normalize values to -1.0 to 1.0
     arr = np.array(data.interpData["y"])
     arr = np.divide(arr, np.max(np.abs(data.interpData["y"])))
@@ -36,12 +37,22 @@ def __exportWave(data, filename):
     # samples only go from -(2**15) to (2**15)
     # => missing one possible value at (2**15)-1
 
-    # resample values, otherwise length wont match (?)
-    data_resampled = resample( arr, len(data.interpData["y"]) )
+    # resample values with same algorithms to match sampling rate
+    xnew = np.linspace(
+        data.interpData["x"].min(), # from
+        data.interpData["x"].max(), # to
+        int(
+            np.ceil(((data.interpData["x"].max() - data.interpData["x"].min()) / Config.DIVISION) * SMPLS)
+        )
+    )
+    spl = interp1d(data.interpData["x"], data.interpData["y"], kind=data.config["interpolation"], copy=True,
+            assume_sorted=True, bounds_error=False, fill_value=0)
+    data_resampled = spl(xnew)
+
     # convert for 16 bit PCM
     data_resampled = data_resampled.astype(np.int16)
 
-    wavfile.write(filename, 44100, data_resampled)
+    wavfile.write(filename, SMPLS, data_resampled)
 
 
 def export(data, export):
