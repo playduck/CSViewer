@@ -194,11 +194,24 @@ class DataFile(ListItem.ListItem):
 
         self.settings.setLayout(self.GLayout)
 
+    def __reparseData(self, dialog):
+        sep = dialog.findChild(QtWidgets.QLineEdit, "sepLineEdit").text()
+        dec = dialog.findChild(QtWidgets.QLineEdit, "decimalLineEdit").text()
+        if not sep or not dec:
+            return
+
+        self.config["seperator"] = sep
+        self.config["decimal"] = dec
+
+        dialog.close()
+        del dialog
+
+        self.__readData(sep=self.config["seperator"], decimal=self.config["decimal"])
+        self.__selectData()
+
     def __selectData(self):
         dialog = uic.loadUi(Config.getResource("./ui/file_open_dialog.ui"))
         dialog.setWindowTitle(os.path.basename(self.filename))
-        xComboBox = dialog.findChild(QtWidgets.QComboBox, "xComboBox")
-        yComboBox = dialog.findChild(QtWidgets.QComboBox, "yComboBox")
 
         # dialog cannot be cancelled on first assignment
         if self.config["xColumn"] == -1 or self.config["yColumn"] == -1:
@@ -210,6 +223,8 @@ class DataFile(ListItem.ListItem):
 
         itemList = self.data.columns.values.tolist()
 
+        xComboBox = dialog.findChild(QtWidgets.QComboBox, "xComboBox")
+        yComboBox = dialog.findChild(QtWidgets.QComboBox, "yComboBox")
         xComboBox.addItems(itemList)
         yComboBox.addItems(itemList)
 
@@ -222,6 +237,12 @@ class DataFile(ListItem.ListItem):
             yComboBox.setCurrentText(self.config["yColumn"])
         else:
             yComboBox.setCurrentIndex(1 if len(itemList) > 0 else 0)
+
+        dialog.findChild(QtWidgets.QLineEdit, "sepLineEdit").setText(str(self.config["seperator"]))
+        dialog.findChild(QtWidgets.QLineEdit, "decimalLineEdit").setText(str(self.config["decimal"]))
+
+        reparseBtn = dialog.findChild(QtWidgets.QPushButton, "reparseBtn")
+        reparseBtn.clicked.connect(lambda: self.__reparseData(dialog))
 
         ret = dialog.exec_()
         dialog.close()
@@ -253,12 +274,12 @@ class DataFile(ListItem.ListItem):
 
         self.sigUpdateUI.emit()
 
-    def __readData(self):
+    def __readData(self, sep=Config.SEPERATOR, decimal=Config.DECIMAL):
         if not os.path.isfile(self.filename):
             self.data = pd.DataFrame([0, 0.001], [0, 0])
             return
 
-        self.data = pd.read_csv(self.filename, sep=Config.SEPERATOR, decimal=Config.DECIMAL, header=0, skipinitialspace=True)
+        self.data = pd.read_csv(self.filename, sep=sep, decimal=decimal, header=0, skipinitialspace=True)
 
     # applies all calculations and interpolation
     def recalculate(self):

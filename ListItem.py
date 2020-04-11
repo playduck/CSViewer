@@ -38,6 +38,8 @@ class ListItem(QtWidgets.QWidget):
                 "yOffset": 0,
                 "xColumn": -1,
                 "yColumn": -1,
+                "seperator": Config.SEPERATOR,
+                "decimal": Config.DECIMAL,
                 "color": color,
                 "width": 3,
                 "interpolation": "linear",
