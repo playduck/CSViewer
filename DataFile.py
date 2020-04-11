@@ -6,7 +6,7 @@
 import os
 import sys
 from pathlib import Path
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5 import QtGui, QtCore, QtWidgets, uic
 import pyqtgraph as pg
 
 import pandas as pd
@@ -195,22 +195,22 @@ class DataFile(ListItem.ListItem):
         self.settings.setLayout(self.GLayout)
 
     def __selectData(self):
-        selectDialog = QtWidgets.QDialog()
-        selectDialog.setWindowFlags(
-            QtCore.Qt.WindowStaysOnTopHint
-        )
-        selectDialog.setWindowTitle(os.path.basename(self.filename))
-        with open(Config.getResource("assets/style.qss"), "r") as fh:
-            selectDialog.setStyleSheet(fh.read())
+        dialog = uic.loadUi(Config.getResource("./ui/file_open_dialog.ui"))
+        dialog.setWindowTitle(os.path.basename(self.filename))
+        xComboBox = dialog.findChild(QtWidgets.QComboBox, "xComboBox")
+        yComboBox = dialog.findChild(QtWidgets.QComboBox, "yComboBox")
 
-        layout = QtWidgets.QGridLayout()
+        # dialog cannot be cancelled on first assignment
+        if self.config["xColumn"] == -1 or self.config["yColumn"] == -1:
+            buttonBox = dialog.findChild(QtWidgets.QDialogButtonBox, "buttonBox")
+            for button in buttonBox.buttons():
+                if buttonBox.buttonRole(button) == QtWidgets.QDialogButtonBox.RejectRole:
+                    button.setCursor(QtGui.QCursor(QtCore.Qt.ForbiddenCursor))
+                    button.setDisabled(True)
 
         itemList = self.data.columns.values.tolist()
 
-        xComboBox = QtWidgets.QComboBox()
         xComboBox.addItems(itemList)
-
-        yComboBox = QtWidgets.QComboBox()
         yComboBox.addItems(itemList)
 
         if self.config["xColumn"] != -1:
@@ -223,36 +223,8 @@ class DataFile(ListItem.ListItem):
         else:
             yComboBox.setCurrentIndex(1 if len(itemList) > 0 else 0)
 
-
-        xLabel = QtWidgets.QLabel("x Achse:")
-        xLabel.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        xLabel.setBuddy(xComboBox)
-        yLabel = QtWidgets.QLabel("y Achse:")
-        yLabel.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        yLabel.setBuddy(yComboBox)
-
-        OKButton = QtWidgets.QPushButton("Ok")
-        OKButton.clicked.connect(selectDialog.accept)
-        OKButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-
-        CancelButton = QtWidgets.QPushButton("Abbrechen")
-        CancelButton.clicked.connect(selectDialog.reject)
-        CancelButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        CancelButton.setFlat(True)
-
-        layout.addWidget(xLabel,    1,0)
-        layout.addWidget(xComboBox, 1,1)
-        layout.addWidget(yLabel,    2,0)
-        layout.addWidget(yComboBox, 2,1)
-
-        layout.addWidget(OKButton,      4,0)
-        layout.addWidget(CancelButton,  4,1)
-
-        selectDialog.setLayout(layout)
-        selectDialog.setMinimumSize(200, 100)
-        selectDialog.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-        ret = selectDialog.exec_()
-        selectDialog.close()
+        ret = dialog.exec_()
+        dialog.close()
 
         if ret:
             l = self.data[xComboBox.currentText()].copy()
@@ -265,8 +237,7 @@ class DataFile(ListItem.ListItem):
                     Die korrekte Darstellung kann nicht garantiert werden.</p>""")
         else:
             if self.config["xColumn"] == -1 or self.config["yColumn"] == -1:
-                self.modData = pd.DataFrame({'x': [0], 'y': [0]})
-                self.interpData = pd.DataFrame({'x': [0], 'y': [0]})
+                self.modData =  self.interpData = pd.DataFrame([0, 0.001], [0, 0])
 
     def __toggleSettings(self):
         if self.settings.isHidden():
@@ -284,7 +255,7 @@ class DataFile(ListItem.ListItem):
 
     def __readData(self):
         if not os.path.isfile(self.filename):
-            self.data = pd.DataFrame([0], [0])
+            self.data = pd.DataFrame([0, 0.001], [0, 0])
             return
 
         self.data = pd.read_csv(self.filename, sep=Config.SEPERATOR, decimal=Config.DECIMAL, header=0, skipinitialspace=True)
