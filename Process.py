@@ -191,7 +191,7 @@ class Process(ListItem.ListItem):
                 else:
                     y[i] = self.__doOperation(y[i], values[i])
 
-                if i % inc == 0:
+                if inc > 0 and i % inc == 0:
                     dlg += 1
 
         # remove all remaining NANs
