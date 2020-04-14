@@ -413,3 +413,17 @@ class Process(ListItem.ListItem):
         self.GLayout.addWidget(self.integrationBox,              5, 1)
 
         self.settings.setLayout(self.GLayout)
+
+    def toDict(self):
+        dct = {
+            "type": "process",
+            "containing": {
+                "config": self.config,
+                "data": self.modData.to_dict(),
+                "children": []
+            }
+        }
+        for item in self.fileList.list:
+            dct["containing"]["children"].append(item.toDict())
+
+        return dct

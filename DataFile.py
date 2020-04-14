@@ -353,3 +353,13 @@ class DataFile(ListItem.ListItem):
         self.config["zIndex"] = zIndex
         self.updatePlot()
         return zIndex - 1
+
+    def toDict(self):
+        return {
+            "type": "datafile",
+            "containing": {
+                "filename": self.filename,
+                "data": self.data.to_dict(),
+                "config": self.config
+            }
+        }

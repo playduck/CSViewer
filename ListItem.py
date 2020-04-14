@@ -379,3 +379,6 @@ class SuperSpinner(QtWidgets.QLineEdit):
         super().mouseReleaseEvent(e)
         self.mouseStartPos = False
         # self.unsetCursor()
+
+    def toDict(self):
+        raise NotImplementedError

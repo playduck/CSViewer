@@ -128,7 +128,6 @@ class Cursor(ListItem.ListItem):
 
         self.plot.setValue(self.config["yOffset"])
 
-
     def updateUI(self):
         self.y_offset.setValue(self.config["yOffset"])
 
@@ -148,3 +147,11 @@ class Cursor(ListItem.ListItem):
         self.config["zIndex"] = zIndex
         self.updatePlot()
         return zIndex - 1
+
+    def toDict(self):
+        return {
+            "type": "cursor",
+            "containing": {
+                "config": self.config
+            }
+        }

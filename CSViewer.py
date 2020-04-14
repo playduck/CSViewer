@@ -88,7 +88,7 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         self.toolbar = QtWidgets.QToolBar()
 
         self.addNew = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_new.png")), "Hinzufügen")
-        self.addNew.clicked.connect(self.addFile)
+        self.addNew.clicked.connect(self.openFileNameDialog)
         self.addNew.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.toolbar.addWidget(self.addNew)
 
@@ -110,9 +110,8 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         self.toolbar.addSeparator()
 
         self.saveBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/save.png")), "Speichern")
-        self.saveBtn.clicked.connect(self.saveOptions)
+        self.saveBtn.clicked.connect(self.save)
         self.saveBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.saveBtn.setDisabled(True) # FIXME
         self.toolbar.addWidget(self.saveBtn)
 
         self.toolbar.addSeparator()
@@ -282,7 +281,7 @@ class CSViewerWindow(QtWidgets.QMainWindow):
             list = self.fileList
 
         if not df:
-            df = self.openFileNameDialog()
+            return
 
         if df:
             self.__connectListItem(df)
@@ -324,60 +323,18 @@ class CSViewerWindow(QtWidgets.QMainWindow):
     # prompts user for input file
     def openFileNameDialog(self):
         options = QtWidgets.QFileDialog.Options()
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
-                                                            "CSV Dateien (*.csv);;Alle Dateinen (*)", options=options)
+        filename, filetype = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
+                                                            "CSV Dateien (*.csv);;CSViewer Datei (*.csviewer);;JSON Dateien (*.json);;Alle Dateinen (*)", options=options)
         if filename:
-            return self.__createFile(filename)
-
-    # show Option Dialog for saving
-    def saveOptions(self):
-        saveDialogBox = QtWidgets.QDialog()
-        saveDialogBox.setWindowFlags(
-            QtCore.Qt.WindowStaysOnTopHint
-        )
-        saveDialogBox.setWindowTitle("Speichern")
-        with open(Config.getResource("assets/style.qss"), "r") as fh:
-            saveDialogBox.setStyleSheet(fh.read())
-
-        layout = QtWidgets.QGridLayout()
-
-        embed = QtWidgets.QCheckBox()
-        embedLabel = QtWidgets.QLabel("Daten Einbetten: ")
-        embedLabel.setBuddy(embed)
-
-        color = QtWidgets.QCheckBox()
-        colorLabel = QtWidgets.QLabel("Farbe speichern: ")
-        colorLabel.setBuddy(color)
-
-        rule = QtWidgets.QFrame()
-        rule.setFrameShape(QtWidgets.QFrame.HLine)
-        rule.setFrameShadow(QtWidgets.QFrame.Sunken)
-
-        OKButton = QtWidgets.QPushButton("Ok")
-        OKButton.clicked.connect(saveDialogBox.accept)
-
-        CancelButton = QtWidgets.QPushButton("Abbrechen")
-        CancelButton.clicked.connect(saveDialogBox.reject)
-
-        layout.addWidget(embedLabel,    0,0)
-        layout.addWidget(embed,         0,1)
-        layout.addWidget(colorLabel,    1,0)
-        layout.addWidget(color,         1,1)
-        layout.addWidget(rule,          2,0,1,0)
-        layout.addWidget(OKButton,      3,0,1,0)
-        layout.addWidget(CancelButton,  4,0,1,0)
-
-        saveDialogBox.setLayout(layout)
-        saveDialogBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-        ret = saveDialogBox.exec_()
-        saveDialogBox.close()
-
-        if ret:
-            self.save(embed.isChecked(), color.isChecked())
+            print(filetype)
+            if filetype == "CSV Dateien (*.csv)":
+                self.addFile(df=self.__createFile(filename))
+            elif filetype == "CSViewer Datei (*.csviewer)" or filetype == "JSON Dateien (*.json)":
+                self.load(filename)
 
     # prompts user for save-file location and saves data
     # TODO
-    def save(self, embed, color):
+    def save(self):
         options = QtWidgets.QFileDialog.Options()
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "",
                                                   "CSV Datei (*.csviewer);;JSON Datei (*.json);;Alle Dateinen (*)", options=options)
@@ -386,64 +343,61 @@ class CSViewerWindow(QtWidgets.QMainWindow):
 
             dataMainArray = []
             for item in self.fileList.list:
-                # dataMainArray.append(data)
+                dataMainArray.append(item.toDict())
                 pass
 
-            dataMainDict = {
+            print(dataMainArray)
+            dataJson = json.dumps({
                 "data": dataMainArray
-            }
-            dataJson = json.dumps(dataMainDict)
+            })
             file.write(dataJson)
 
             file.close()
 
     # loads save file
-    def load(self):
-        options = QtWidgets.QFileDialog.Options()
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
-                                                            "CSV Datei (*.csviewer);;JSON Datei (*.json);;Alle Dateinen (*)",
-                                                            options=options)
-        if filename:
-            file = open(filename, "r")
-            dataJson = json.loads(file.read())
-            for data in dataJson["data"]:
-                if os.path.isfile(data["filename"]) or data["dataEmbed"]:
+    def load(self, filename):
+        file = open(filename, "r")
+        dataJson = json.loads(file.read())
+        file.close()
 
-                    color = data["color"] if data["color"] else getColor(len(self.globalFileList))
+        self.load_recursive(dataJson["data"], parentList=self.fileList)
+        self.reorder()
 
-                    df = DataFile.DataFile(data["filename"], color, self)
-                    df.enabled = data["enabled"]
-                    df.width = data["width"]
-                    df.xOffset = data["xOffset"]
-                    df.yOffset = data["yOffset"]
-                    df.interpolation = data["interpolation"]
-                    df.interpolationAmount = data["interpolationAmount"]
-                    df.integrate = data["integrate"]
-                    df.filter = data["filter"]
+    def load_recursive(self, dataJson, parentList):
+        for data in dataJson:
+            if data["type"] == "cursor":
+                c = Cursor.Cursor(
+                    data["containing"]["config"]["color"],
+                    config=data["containing"]["config"]
+                )
+                self.__connectListItem(c)
+                parentList.addItem(c)
+                self.plot.addPlot(c)
+            elif data["type"] == "datafile":
+                d = DataFile.DataFile(
+                    data["containing"]["filename"],
+                    data["containing"]["config"]["color"],
+                    config=data["containing"]["config"]
+                )
+                d.data = data["containing"]["data"]
+                self.__connectListItem(d)
 
-                    if data["dataEmbed"]:
-                        df.data = pd.read_json(data["dataEmbed"])
+                parentList.addItem(d)
+                self.plot.addPlot(d)
+            elif data["type"] == "process":
+                p = Process.Process(
+                    data["containing"]["config"]["color"],
+                    data["containing"]["config"]
+                )
+                p.data = data["containing"]["data"]
+                self.__connectProcess(p)
+                self.__connectListItem(p)
 
-                    df.initSettings()
-                    df.calculateData()
+                parentList.addItem(p)
+                self.plot.addPlot(p)
 
-                    # df.plot, df.cursor = self.plot.initPlot(df)
-                    self.globalFileList.append(df)
-                    self.addFileList(df)
-                else:
-                    msgBox = QtWidgets.QMessageBox()
-                    msgBox.setIcon(QtWidgets.QMessageBox.Critical)
-                    msgBox.setWindowTitle("Datei Fehler!")
-                    msgBox.setText("{:s} kann nicht gefunden werden!".format(data["filename"]))
-                    msgBox.setInformativeText("Die Datei {:s} kann nicht gefunden oder nicht geöffnet werden. Die Datei wird übersprungen.".format(data["filename"]))
-                    msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    msgBox.addButton(QtWidgets.QMessageBox.Abort)
+                self.load_recursive(data["containing"]["children"], p.fileList)
 
-                    if QtWidgets.QMessageBox.Abort == msgBox.exec_():
-                        break
-
-            file.close()
-            df.updatePlot()
 
     # shows info box
     def showInfo(self):
