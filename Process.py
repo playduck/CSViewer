@@ -299,10 +299,17 @@ class Process(ListItem.ListItem):
         return infoText
 
     def autoscale(self):
-        considerations = super().autoscale()
+        cst = super().autoscale()
+
         for item in self.fileList.list:
-            considerations = considerations + item.autoscale()
-        return considerations
+            icst = item.autoscale()
+
+            cst["xmin"] = min(icst["xmin"], cst["xmin"])
+            cst["xmax"] = max(icst["xmax"], cst["xmax"])
+            cst["ymin"] = min(icst["ymin"], cst["ymin"])
+            cst["ymax"] = max(icst["ymax"], cst["ymax"])
+
+        return cst
 
     def setZIndex(self, zIndex):
         self.config["zIndex"] = zIndex

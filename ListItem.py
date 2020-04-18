@@ -283,9 +283,19 @@ class ListItem(QtWidgets.QWidget):
 
     def autoscale(self):
         if self.config["enabled"]:
-            return [self.plot]
+            return {
+                "xmin": self.interpData["x"][0],
+                "xmax": self.interpData["x"][len(self.interpData["x"])-1],
+                "ymin": self.interpData["y"].min(),
+                "ymax": self.interpData["y"].max()
+            }
         else:
-            return []
+            return {
+                "xmin": 0,
+                "xmax": 0,
+                "ymin": 0,
+                "ymax": 0
+            }
 
     def setHighlight(self, highlight):
         self.config["highlight"] = highlight

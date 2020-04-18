@@ -176,12 +176,23 @@ class CSViewerWindow(QtWidgets.QMainWindow):
     # scales plot based on all enabled objects
     def autoscale(self):
         # disabled graphs and cursors shouldn't influence the view
-        considerations = []
+        cst = {
+            "xmin": 0,
+            "xmax": 0,
+            "ymin": 0,
+            "ymax": 0
+        }
 
         for item in self.fileList.list:
-            considerations = considerations + item.autoscale()
+            icst = item.autoscale()
 
-        self.plot.plt.autoRange(padding=0.2, items=considerations)
+            cst["xmin"] = min(icst["xmin"], cst["xmin"])
+            cst["xmax"] = max(icst["xmax"], cst["xmax"])
+            cst["ymin"] = min(icst["ymin"], cst["ymin"])
+            cst["ymax"] = max(icst["ymax"], cst["ymax"])
+
+        self.plot.plt.setRange(xRange=(cst["xmin"], cst["xmax"]), yRange=(cst["ymin"], cst["ymax"]),
+                padding=0.2, update=True, disableAutoRange=True)
 
     def deleteSpecific(self, li):
         self.fileList.deleteSelected(self.plot, li.item)
@@ -326,14 +337,12 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         filename, filetype = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                             "CSV Dateien (*.csv);;CSViewer Datei (*.csviewer);;JSON Dateien (*.json);;Alle Dateinen (*)", options=options)
         if filename:
-            print(filetype)
             if filetype == "CSV Dateien (*.csv)":
                 self.addFile(df=self.__createFile(filename))
             elif filetype == "CSViewer Datei (*.csviewer)" or filetype == "JSON Dateien (*.json)":
                 self.load(filename)
 
     # prompts user for save-file location and saves data
-    # TODO
     def save(self):
         options = QtWidgets.QFileDialog.Options()
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "",
@@ -346,7 +355,6 @@ class CSViewerWindow(QtWidgets.QMainWindow):
                 dataMainArray.append(item.toDict())
                 pass
 
-            print(dataMainArray)
             dataJson = json.dumps({
                 "data": dataMainArray
             })
