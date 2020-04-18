@@ -218,8 +218,6 @@ class Process(ListItem.ListItem):
         x = x + self.config["xOffset"]
         y = y + self.config["yOffset"]
 
-        print("process length", len(x), len(y))
-
         # save data
         self.interpData = {'x': x, 'y': y}
 

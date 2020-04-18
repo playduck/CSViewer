@@ -337,7 +337,6 @@ class SuperSpinner(QtWidgets.QLineEdit):
         if (self.beeingEdited or self.mouseStartPos) and t and float(t):
             val = round(float(t), Config.PRECISION)
             # self.valueChanged.emit(val)
-            print("Set Val")
             self.setValue(val, True)
 
     def setRange(self, min, max):

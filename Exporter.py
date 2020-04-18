@@ -81,7 +81,6 @@ class __exportWave(QtWidgets.QDialog):
 
 
 def export(data, export):
-    print(export)
     filename = __saveDialog(__getFileType(export))
 
     if filename:

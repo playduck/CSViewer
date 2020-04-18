@@ -49,13 +49,11 @@ class Graph(pg.PlotDataItem):
     # https://github.com/pyqtgraph/pyqtgraph/blob/develop/examples/hdf5.py
     def setDownsampleData(self, x, y):
         if x is None or y is None:
-            print("no data")
             self.setData([])
             return
 
         vb = self.getViewBox()
         if vb is None:
-            print("no vb")
             return  # no ViewBox yet
 
         # Determine what data range must be read from HDF5
@@ -68,8 +66,6 @@ class Graph(pg.PlotDataItem):
 
         # Decide by how much we should downsample
         ds = int((stop-start) / self.limit) + 1
-
-        print(">>", stop-start, ds)
 
         if ds == 1:
             # Small enough to display with no intervention.

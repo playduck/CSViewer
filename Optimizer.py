@@ -170,7 +170,3 @@ def optimizeTime(lst):
     info.addItem("Abgeschlossen")
     QtTest.QTest.qWait(1000 * 2)
     dlg.setValue(100)
-
-    # print("Saving generated Error Function")
-    # df = pd.DataFrame({"x": x, "y": y})
-    # df.to_csv("./error.csv", encoding='utf-8', index=False)
