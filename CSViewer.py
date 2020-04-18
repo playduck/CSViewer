@@ -334,8 +334,9 @@ class CSViewerWindow(QtWidgets.QMainWindow):
     # prompts user for input file
     def openFileNameDialog(self):
         options = QtWidgets.QFileDialog.Options()
-        filename, filetype = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
-                                                            "CSV Dateien (*.csv);;CSViewer Datei (*.csviewer);;JSON Dateien (*.json);;Alle Dateinen (*)", options=options)
+        filename, filetype = QtWidgets.QFileDialog.getOpenFileName(self, "Datei Hinzufügen", "",
+                    "CSV Dateien (*.csv);;CSViewer Datei (*.csviewer);;JSON Dateien (*.json);;Alle Dateinen (*)", options=options)
+
         if filename:
             if filetype == "CSV Dateien (*.csv)":
                 self.addFile(df=self.__createFile(filename))
@@ -387,7 +388,7 @@ class CSViewerWindow(QtWidgets.QMainWindow):
                     data["containing"]["config"]["color"],
                     config=data["containing"]["config"]
                 )
-                d.data = data["containing"]["data"]
+                d.data = pd.DataFrame(data["containing"]["data"])
                 self.__connectListItem(d)
 
                 parentList.addItem(d)
@@ -397,7 +398,7 @@ class CSViewerWindow(QtWidgets.QMainWindow):
                     data["containing"]["config"]["color"],
                     data["containing"]["config"]
                 )
-                p.data = data["containing"]["data"]
+                p.data = pd.DataFrame(data["containing"]["data"])
                 self.__connectProcess(p)
                 self.__connectListItem(p)
 
