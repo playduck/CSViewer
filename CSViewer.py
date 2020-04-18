@@ -19,6 +19,7 @@ import Cursor
 
 import pyqtgraph as pg
 import pandas as pd
+import numpy as np
 from PyQt5 import QtGui, QtCore, QtWidgets
 import qtmodern.styles
 import qtmodern.windows
@@ -177,10 +178,10 @@ class CSViewerWindow(QtWidgets.QMainWindow):
     def autoscale(self):
         # disabled graphs and cursors shouldn't influence the view
         cst = {
-            "xmin": 0,
-            "xmax": 0,
-            "ymin": 0,
-            "ymax": 0
+            "xmin": np.nan,
+            "xmax": np.nan,
+            "ymin": np.nan,
+            "ymax": np.nan
         }
 
         for item in self.fileList.list:

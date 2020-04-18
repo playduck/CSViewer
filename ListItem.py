@@ -291,10 +291,10 @@ class ListItem(QtWidgets.QWidget):
             }
         else:
             return {
-                "xmin": 0,
-                "xmax": 0,
-                "ymin": 0,
-                "ymax": 0
+                "xmin": np.nan,
+                "xmax": np.nan,
+                "ymin": np.nan,
+                "ymax": np.nan
             }
 
     def setHighlight(self, highlight):
