@@ -4,6 +4,7 @@
 #
 
 from PyQt5 import QtGui, QtCore, QtWidgets, uic
+import pyqtgraph as pg
 import pandas as pd
 import numpy as np
 from scipy.io import wavfile
@@ -29,15 +30,18 @@ class __exportWave(QtWidgets.QDialog):
         uic.loadUi(Config.getResource("./ui/wav_save_dialog.ui"), self)
         sr = self.findChild(QtWidgets.QSpinBox, "sample_rate")
         bps = self.findChild(QtWidgets.QComboBox, "bits_per_sample")
+        normalize = self.findChild(QtWidgets.QCheckBox, "normalize")
         sr.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
 
         ret = self.exec_()
         if ret:
-            self.__export(data, filename, sr.value(), bps.currentText())
+            self.__export(data, filename, normalize.isChecked(), sr.value(), bps.currentText())
 
     # function based on
     # https://stackoverflow.com/a/41586167/12231900
-    def __export(self, data, filename, samplingRate, bitsPerSample):
+    def __export(self, data, filename, normalize, samplingRate, bitsPerSample):
+        dlg = pg.ProgressDialog("Exportieren", busyCursor=True, wait=0, disable=False)
+
         if "8-Bit PCM" in bitsPerSample:
             dtype = np.uint8
         elif "16-Bit PCM" in bitsPerSample:
@@ -47,6 +51,7 @@ class __exportWave(QtWidgets.QDialog):
         else:
             print("wave ui combobox exposes unsuportetd bps setting (", bitsPerSample ,")")
             return
+        dlg += 10
 
         # resample values with same algorithms to match sampling rate
         xnew = np.linspace(
@@ -57,27 +62,41 @@ class __exportWave(QtWidgets.QDialog):
                  / Config.DIVISION) * samplingRate)
             )
         )
+        dlg += 10
+
         spl = interp1d(data.interpData["x"], data.interpData["y"], kind=data.config["interpolation"], copy=True,
                 assume_sorted=True, bounds_error=False, fill_value=0)
+        dlg += 10
 
-        # normalize values to -1.0 to 1.0
+
         arr = spl(xnew)
-        arr = np.divide(arr, np.max(np.abs(arr)))
+        dlg += 10
 
         amplitude = np.iinfo(dtype).max
+        if np.max(np.abs(arr)) > amplitude:
+            print("wave max value exceedes bps range (", np.max(np.abs(arr)), ">", amplitude, ")" )
+            return
 
-        if dtype == np.dtype(np.uint8).type:
-            arr = np.add(arr, 1)
-            amplitude = amplitude // 2
+        if normalize:
+            # normalize values to -1.0 to 1.0
+            arr = np.divide(arr, np.max(np.abs(arr)))
+            dlg += 5
 
-        arr = np.multiply(arr, amplitude)
-        # samples only go from -(2**15) to (2**15) for 16-Bit PCM for example
-        # => missing one possible value at (2**15)-1
+            if dtype == np.dtype(np.uint8).type:
+                arr = np.add(arr, 1)
+                amplitude = amplitude // 2
+
+            arr = np.multiply(arr, amplitude)
+            dlg += 5
+            # samples only go from -(2**15) to (2**15) for 16-Bit PCM for example
+            # => missing one possible value at (2**15)-1
 
         # convert to data type
         data_resampled = arr.astype(dtype)
+        dlg += 10
 
         wavfile.write(filename, samplingRate, data_resampled)
+        dlg.setValue(100)
 
 
 def export(data, export):
