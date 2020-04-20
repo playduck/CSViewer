@@ -29,12 +29,13 @@ DIVISION = 1
 PPD = 100
 # rounding values after comma
 PRECISION = 8
-
+# max ammount of sampling points for datafiles only
 MAX = 2000
 
 def getResource(path):
-    root = Path()
     if getattr(sys, 'frozen', False):
         root = Path(sys._MEIPASS) # sys has attribute if it's frozen
+    else:
+        root = Path()
 
     return str(root / path)

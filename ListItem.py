@@ -212,6 +212,8 @@ class ListItem(QtWidgets.QWidget):
         # self.plot.setData(self.interpData["x"], self.interpData["y"])
         if self.config["enabled"]:
             self.plot.setDownsampleData(self.interpData["x"], self.interpData["y"])
+        else:
+            self.plot.setDownsampleData([0, 0.001], [0, 0])
         self.dataUpdated = False
 
     def update(self):

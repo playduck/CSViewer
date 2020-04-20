@@ -12,7 +12,7 @@ for package, files in package_imports:
     proot = Path(importlib.import_module(package).__file__).parent
     added_file.extend((proot / f, package) for f in files)
 
-# add icons
+# add assets
 assets = "assets"
 icon_files = [f for f in os.listdir(assets) if os.path.isfile(os.path.join(assets, f))]
 for icon_file in icon_files:
@@ -78,7 +78,8 @@ if sys.platform == "darwin":
                         "LSBackgroundOnly": "False",
                         "NSRequiresAquaSystemAppearance": "True"
                         # should be false to support dark mode
-                        # known bug: https://github.com/pyinstaller/pyinstaller/issues/4615 with Qt
+                        # known bug: https://github.com/pyinstaller/pyinstaller/issues/4615 with pyinstaller
+                        # need to recompile pyinstaller with SDK >= 10.13
                     },
                     icon=os.path.abspath(os.path.join(assets, "icon-512.icns"))
                     )

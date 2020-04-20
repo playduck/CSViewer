@@ -51,9 +51,6 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         geometry.moveCenter(center)
         self.move(geometry.topLeft())
 
-        # self.mainLayout = QtWidgets.QVBoxLayout()
-        # self.subLayout = QtWidgets.QHBoxLayout()
-
         # Viewer handles the plotting section
         viewer = QtWidgets.QVBoxLayout()
         self.plot = PlotViewer.PlotViewer(self)
@@ -71,11 +68,6 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         self.fileList.setObjectName("fileList")
         self.__connectProcess(self)
 
-        # self.fileList.sigSource.connect(self.beginDrag)
-        # self.fileList.sigDest.connect(self.endDrag)
-        # self.fileList.sigTrigger.connect(self.doDrag)
-        # self.fileList.sigDeselect.connect(self.deselectAll)
-
         self.fileListDock = QtWidgets.QDockWidget("Dateien")
         self.fileListDock.setTitleBarWidget(QtWidgets.QWidget())
         self.fileListDock.setFeatures(
@@ -84,8 +76,6 @@ class CSViewerWindow(QtWidgets.QMainWindow):
         )
         self.fileListDock.setWidget(self.fileList)
 
-        # Toolbar related Buttons
-        # FIXME toolbar cannot produce extension popup on samall screen width when it's not a child of QMainWindow
         self.toolbar = QtWidgets.QToolBar()
 
         self.addNew = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_new.png")), "Hinzufügen")

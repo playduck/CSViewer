@@ -56,7 +56,7 @@ class Graph(pg.PlotDataItem):
         if vb is None:
             return  # no ViewBox yet
 
-        # Determine what data range must be read from HDF5
+        # Determine what data range must be read
         xrange = vb.viewRange()[0]
         limits = [
             max(0,int(xrange[0])-1),
@@ -73,7 +73,6 @@ class Graph(pg.PlotDataItem):
             scale = 1
             start = 0
         else:
-            # ds *= 4
             # Here convert data into a down-sampled array suitable for visualizing.
             # Must do this piecewise to limit memory usage.
             samples = 1 + ((stop-start) // ds)
