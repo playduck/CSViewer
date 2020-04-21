@@ -68,7 +68,6 @@ class __exportWave(QtWidgets.QDialog):
                 assume_sorted=True, bounds_error=False, fill_value=0)
         dlg += 10
 
-
         arr = spl(xnew)
         dlg += 10
 
@@ -78,18 +77,26 @@ class __exportWave(QtWidgets.QDialog):
             return
 
         if normalize:
-            # normalize values to -1.0 to 1.0
-            arr = np.divide(arr, np.max(np.abs(arr)))
-            dlg += 5
+            divide = np.max(np.abs(arr)) # scale to max range
+        else:
+            divide = 1000 #mA
+            # scale to 1A maximum as per import into ltspice
 
-            if dtype == np.dtype(np.uint8).type:
-                arr = np.add(arr, 1)
-                amplitude = amplitude // 2
+        # normalize values to -1.0 to 1.0
+        arr = np.divide(arr, divide)
+        dlg += 5
 
-            arr = np.multiply(arr, amplitude)
-            dlg += 5
-            # samples only go from -(2**15) to (2**15) for 16-Bit PCM for example
-            # => missing one possible value at (2**15)-1
+        if dtype == np.dtype(np.uint8).type:
+            arr = np.add(arr, 1)
+            amplitude = amplitude // 2
+
+        arr = np.multiply(arr, amplitude)
+        dlg += 5
+        # samples only go from -(2**15) to (2**15) for 16-Bit PCM for example
+        # => missing one possible value at (2**15)-1
+
+        if dtype != np.dtype(np.float).type:
+            arr = np.round(arr, 0)
 
         # convert to data type
         data_resampled = arr.astype(dtype)
